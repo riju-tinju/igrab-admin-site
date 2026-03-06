@@ -1228,7 +1228,7 @@
                     const headerImg = document.querySelector('#productImage img');
                     if (headerImg && existingImages.length > 0) {
                         const imgPath = existingImages[0];
-                        headerImg.src = (imgPath.startsWith('/') || imgPath.startsWith('http')) ? imgPath : '/' + imgPath;
+                        headerImg.src = (imgPath.startsWith('/') || imgPath.startsWith('http')) ? imgPath : '/uploads/products/' + imgPath;
                         headerImg.classList.remove('hidden');
                     }
 
