@@ -1,0 +1,565 @@
+<%- include('../../partials/Header') %>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>iGrab Cafe - Contact Messages</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    </head>
+
+    <body class="bg-gray-100">
+        <style>
+            .brand-teal {
+                background-color: #1E7065;
+            }
+
+            .brand-teal-light {
+                background-color: #2F8A7B;
+            }
+
+            .text-brand-teal {
+                color: #1E7065;
+            }
+
+            .border-brand-teal {
+                border-color: #1E7065;
+            }
+
+            .hover-brand-teal:hover {
+                background-color: #1E7065;
+            }
+
+            .contact-card {
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .contact-card:hover {
+                border-left-color: #1E7065;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Status Styles */
+            .status-new {
+                background-color: #3B82F6;
+                color: white;
+            }
+
+            .status-read {
+                background-color: #10B981;
+                color: white;
+            }
+
+            .status-archived {
+                background-color: #6B7280;
+                color: white;
+            }
+
+            .filter-active {
+                background-color: #1E7065;
+                color: white;
+            }
+
+            .loading-spinner {
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #1E7065;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .toast {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                max-width: 400px;
+            }
+
+            .toast.show {
+                transform: translateX(0);
+            }
+
+            .toast.success {
+                background-color: #10b981;
+            }
+
+            .toast.error {
+                background-color: #ef4444;
+            }
+
+            /* Modal Styles */
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                overflow-y: auto;
+            }
+
+            .modal.show {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background: white;
+                border-radius: 12px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        </style>
+
+        <!-- Main Content -->
+        <main class="main-content p-4 sm:p-6">
+            <!-- Header Section -->
+            <div class="mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Contact Messages</h1>
+                        <p class="text-gray-600">Manage customer inquiries and messages</p>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="statsCards">
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total</p>
+                                <p class="text-2xl font-bold text-gray-900" id="totalCount">0</p>
+                            </div>
+                            <i class="fas fa-envelope text-3xl text-gray-400"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">New</p>
+                                <p class="text-2xl font-bold text-blue-600" id="newCount">0</p>
+                            </div>
+                            <i class="fas fa-envelope-open text-3xl text-blue-400"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Read</p>
+                                <p class="text-2xl font-bold text-green-600" id="readCount">0</p>
+                            </div>
+                            <i class="fas fa-check-circle text-3xl text-green-400"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Archived</p>
+                                <p class="text-2xl font-bold text-gray-600" id="archivedCount">0</p>
+                            </div>
+                            <i class="fas fa-archive text-3xl text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+                <div class="flex flex-col gap-4">
+                    <!-- Search -->
+                    <div class="flex-1 relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Search by name, email, or message..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            class="filter-btn filter-active px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                            data-filter="all">
+                            <i class="fas fa-list mr-1"></i>All Messages
+                        </button>
+                        <button
+                            class="filter-btn px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                            data-filter="new">
+                            <i class="fas fa-envelope mr-1"></i>New
+                        </button>
+                        <button
+                            class="filter-btn px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                            data-filter="read">
+                            <i class="fas fa-check-circle mr-1"></i>Read
+                        </button>
+                        <button
+                            class="filter-btn px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                            data-filter="archived">
+                            <i class="fas fa-archive mr-1"></i>Archived
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden bg-white rounded-lg shadow-sm border p-8">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="loading-spinner mb-4"></div>
+                    <p class="text-gray-600">Loading contacts...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden bg-white rounded-lg shadow-sm border p-8">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">No messages found</h3>
+                    <p class="text-gray-500 mb-4">Try adjusting your search or filter criteria.</p>
+                </div>
+            </div>
+
+            <!-- Contacts Table -->
+            <div id="contactsContainer" class="bg-white rounded-lg shadow-sm border">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="text-left p-4 font-semibold text-gray-900">Contact Info</th>
+                                <th class="text-left p-4 font-semibold text-gray-900">Inquiry Type</th>
+                                <th class="text-left p-4 font-semibold text-gray-900">Message</th>
+                                <th class="text-left p-4 font-semibold text-gray-900">Status</th>
+                                <th class="text-left p-4 font-semibold text-gray-900">Date</th>
+                                <th class="text-left p-4 font-semibold text-gray-900">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactsTableBody">
+                            <!-- Contacts will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between" id="paginationContainer">
+                <div class="text-sm text-gray-700 mb-4 sm:mb-0" id="paginationInfo"></div>
+                <div class="flex items-center space-x-2" id="paginationButtons"></div>
+            </div>
+        </main>
+
+        <!-- Contact Details Modal -->
+        <div id="contactModal" class="modal">
+            <div class="modal-content">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-900">Contact Details</h2>
+                        <button onclick="closeContactModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="contactDetailsContent">
+                        <!-- Contact details will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toastContainer"></div>
+
+        <script>
+            const API_BASE_URL = '/api';
+            let currentPage = 1;
+            let currentFilter = 'all';
+            let currentSearch = '';
+            let searchTimeout = null;
+
+            // Toast Manager
+            class ToastManager {
+                static show(message, type = 'success', duration = 3000) {
+                    const toast = document.createElement('div');
+                    toast.className = `toast ${type}`;
+                    toast.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+              <span>${message}</span>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `;
+
+                    document.getElementById('toastContainer').appendChild(toast);
+                    setTimeout(() => toast.classList.add('show'), 100);
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, duration);
+                }
+            }
+
+            // Load contacts
+            async function loadContacts() {
+                try {
+                    document.getElementById('loadingState').classList.remove('hidden');
+                    document.getElementById('contactsContainer').classList.add('hidden');
+                    document.getElementById('emptyState').classList.add('hidden');
+
+                    const params = new URLSearchParams({
+                        page: currentPage,
+                        limit: 20,
+                        status: currentFilter,
+                        search: currentSearch
+                    });
+
+                    const response = await fetch(`${API_BASE_URL}/contacts?${params}`);
+                    const data = await response.json();
+
+                    console.log('API Response:', data);
+                    console.log('Success:', data.success);
+                    console.log('Contacts:', data.contacts);
+                    console.log('Contacts length:', data.contacts?.length);
+
+                    document.getElementById('loadingState').classList.add('hidden');
+
+                    if (data.success && data.contacts && data.contacts.length > 0) {
+                        console.log('Rendering contacts...');
+                        renderContacts(data.contacts);
+                        updateStats(data.counts);
+                        updatePagination(data.pagination);
+                        document.getElementById('contactsContainer').classList.remove('hidden');
+                    } else {
+                        console.log('Showing empty state. Reason:', !data.success ? 'API failed' : 'No contacts');
+                        document.getElementById('emptyState').classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error loading contacts:', error);
+                    document.getElementById('loadingState').classList.add('hidden');
+                    ToastManager.show('Failed to load contacts', 'error');
+                }
+            }
+
+            // Render contacts
+            function renderContacts(contacts) {
+                const tbody = document.getElementById('contactsTableBody');
+                tbody.innerHTML = contacts.map(contact => `
+        <tr class="border-b hover:bg-gray-50 transition-colors">
+          <td class="p-4">
+            <div class="font-medium text-gray-900">${contact.name}</div>
+            <div class="text-sm text-gray-600">${contact.email}</div>
+            ${contact.phone ? `<div class="text-sm text-gray-500">${contact.phone}</div>` : ''}
+          </td>
+          <td class="p-4">
+            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+              ${contact.inquiryType}
+            </span>
+          </td>
+          <td class="p-4">
+            <div class="text-sm text-gray-700 truncate max-w-xs">${contact.message}</div>
+          </td>
+          <td class="p-4">
+            <select class="status-select status-${contact.status} text-xs px-2 py-1 rounded" 
+                    data-id="${contact._id}" onchange="updateStatus('${contact._id}', this.value)">
+              <option value="new" ${contact.status === 'new' ? 'selected' : ''}>New</option>
+              <option value="read" ${contact.status === 'read' ? 'selected' : ''}>Read</option>
+              <option value="archived" ${contact.status === 'archived' ? 'selected' : ''}>Archived</option>
+            </select>
+          </td>
+          <td class="p-4 text-sm text-gray-600">
+            ${new Date(contact.submittedAt).toLocaleDateString()}
+          </td>
+          <td class="p-4">
+            <button onclick="viewContact('${contact._id}')" class="text-brand-teal hover:text-teal-700 mr-2">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button onclick="deleteContact('${contact._id}')" class="text-red-600 hover:text-red-700">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+            }
+
+            // Update stats
+            function updateStats(counts) {
+                document.getElementById('totalCount').textContent = counts.all || 0;
+                document.getElementById('newCount').textContent = counts.new || 0;
+                document.getElementById('readCount').textContent = counts.read || 0;
+                document.getElementById('archivedCount').textContent = counts.archived || 0;
+            }
+
+            // Update pagination
+            function updatePagination(pagination) {
+                document.getElementById('paginationInfo').textContent =
+                    `Showing ${((pagination.currentPage - 1) * pagination.limit) + 1} to ${Math.min(pagination.currentPage * pagination.limit, pagination.totalContacts)} of ${pagination.totalContacts}`;
+
+                const buttons = [];
+                for (let i = 1; i <= pagination.totalPages; i++) {
+                    buttons.push(`
+          <button onclick="goToPage(${i})" 
+                  class="px-3 py-1 rounded ${i === pagination.currentPage ? 'bg-brand-teal text-white' : 'bg-white text-gray-700 border'}">
+            ${i}
+          </button>
+        `);
+                }
+                document.getElementById('paginationButtons').innerHTML = buttons.join('');
+            }
+
+            // Update contact status
+            async function updateStatus(id, status) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/contacts/${id}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        ToastManager.show('Status updated successfully', 'success');
+                        loadContacts();
+                    } else {
+                        ToastManager.show(data.error || 'Failed to update status', 'error');
+                    }
+                } catch (error) {
+                    ToastManager.show('Failed to update status', 'error');
+                }
+            }
+
+            // View contact details
+            async function viewContact(id) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/contacts/${id}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const contact = data.contact;
+                        document.getElementById('contactDetailsContent').innerHTML = `
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Name</label>
+                <p class="text-gray-900">${contact.name}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Email</label>
+                <p class="text-gray-900">${contact.email}</p>
+              </div>
+              ${contact.phone ? `
+                <div>
+                  <label class="text-sm font-medium text-gray-600">Phone</label>
+                  <p class="text-gray-900">${contact.phone}</p>
+                </div>
+              ` : ''}
+              <div>
+                <label class="text-sm font-medium text-gray-600">Inquiry Type</label>
+                <p class="text-gray-900 capitalize">${contact.inquiryType}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Message</label>
+                <p class="text-gray-900 whitespace-pre-wrap">${contact.message}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Submitted</label>
+                <p class="text-gray-900">${new Date(contact.submittedAt).toLocaleString()}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">IP Address</label>
+                <p class="text-gray-900">${contact.ipAddress || 'N/A'}</p>
+              </div>
+            </div>
+          `;
+                        document.getElementById('contactModal').classList.add('show');
+
+                        // Mark as read if it's new
+                        if (contact.status === 'new') {
+                            updateStatus(id, 'read');
+                        }
+                    }
+                } catch (error) {
+                    ToastManager.show('Failed to load contact details', 'error');
+                }
+            }
+
+            // Close modal
+            function closeContactModal() {
+                document.getElementById('contactModal').classList.remove('show');
+            }
+
+            // Delete contact
+            async function deleteContact(id) {
+                if (!confirm('Are you sure you want to delete this contact message?')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/contacts/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        ToastManager.show('Contact deleted successfully', 'success');
+                        loadContacts();
+                    } else {
+                        ToastManager.show(data.error || 'Failed to delete contact', 'error');
+                    }
+                } catch (error) {
+                    ToastManager.show('Failed to delete contact', 'error');
+                }
+            }
+
+            // Go to page
+            function goToPage(page) {
+                currentPage = page;
+                loadContacts();
+            }
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('filter-active'));
+                    this.classList.add('filter-active');
+                    currentFilter = this.dataset.filter;
+                    currentPage = 1;
+                    loadContacts();
+                });
+            });
+
+            // Search
+            document.getElementById('searchInput').addEventListener('input', function (e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentSearch = e.target.value;
+                    currentPage = 1;
+                    loadContacts();
+                }, 500);
+            });
+
+            // Initial load
+            loadContacts();
+        </script>
+    </body>
+
+    <%- include('../../partials/Footer') %>

@@ -1,0 +1,1348 @@
+<style>
+    /* Modal Styles - Updated to match dashboard */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+}
+
+/* Modal Header - Dashboard Style */
+.modal-header {
+  padding: 24px 24px 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #fafafa;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header Controls - Updated */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+/* Search Styles - Dashboard Design */
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 40px 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  background: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.search-input:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+  background: white;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+  font-size: 14px;
+}
+
+/* Saved Toggle Button - Dashboard Style */
+.saved-toggle-btn {
+  position: relative;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.saved-toggle-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.saved-toggle-btn.active {
+  background: #059669;
+  color: white;
+  border-color: #059669;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.saved-toggle-btn.active .fa-heart {
+  color: #fecaca;
+}
+
+.saved-count {
+  background: #dc2626;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.saved-count.zero {
+  display: none;
+}
+
+/* Close Button - Dashboard Style */
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+/* Modal Body - Updated */
+.modal-body {
+  padding: 24px;
+  max-height: 480px;
+  overflow-y: auto;
+  background: white;
+}
+
+/* Custom Scrollbar - Dashboard Style */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Modal Footer - Dashboard Style */
+.modal-footer {
+  padding: 20px 24px 24px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #fafafa;
+}
+
+/* Branch Group Styles - Updated */
+.branch-group {
+  margin-bottom: 32px;
+}
+
+.branch-group:last-child {
+  margin-bottom: 0;
+}
+
+.branch-group-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #059669;
+}
+
+.branch-group-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.branch-group-count {
+  background: #059669;
+  color: white;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 12px;
+  min-width: 24px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Skeleton Loading Styles - Updated */
+.skeleton-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
+  background: white;
+}
+
+.skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  margin-right: 16px;
+}
+
+.skeleton-content {
+  flex: 1;
+}
+
+.skeleton-name {
+  width: 140px;
+  height: 16px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-details {
+  width: 100px;
+  height: 12px;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-pulse {
+  0% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* Delivery Executive Item Styles - Dashboard Design */
+.delivery-exec-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.delivery-exec-item:hover {
+  border-color: #059669;
+  background-color: #f0fdf4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.delivery-exec-item.selected {
+  border-color: #059669;
+  background-color: #ecfdf5;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.delivery-exec-item.unavailable {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}
+
+.delivery-exec-item.unavailable:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #e5e7eb;
+  background-color: #f9fafb;
+}
+
+/* Executive Avatar - Updated */
+.exec-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin-right: 16px;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+/* Executive Info - Updated */
+.exec-info {
+  flex: 1;
+  margin-right: 44px; /* Space for heart button */
+}
+
+.exec-name {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 15px;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.exec-details {
+  font-size: 13px;
+  color: #6b7280;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.exec-details span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exec-details i {
+  font-size: 11px;
+  width: 14px;
+  color: #9ca3af;
+}
+
+.exec-branches {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Status Styles - Dashboard Colors */
+.exec-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-available {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status-busy {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.status-driving {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* Save Heart Button - Dashboard Style */
+.save-heart-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  font-size: 16px;
+  cursor: pointer;
+  color: #d1d5db;
+  transition: all 0.2s ease;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.save-heart-btn:hover {
+  color: #ef4444;
+  transform: scale(1.05);
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.save-heart-btn.saved {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.save-heart-btn.saving {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: saving-pulse 1s ease-in-out infinite;
+}
+
+@keyframes saving-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Empty Branch Notification - Dashboard Style */
+.empty-branch-notification {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: #0369a1;
+  margin-bottom: 12px;
+}
+
+.empty-branch-notification i {
+  font-size: 24px;
+  margin-bottom: 12px;
+  display: block;
+  color: #0284c7;
+}
+
+.empty-branch-notification strong {
+  display: block;
+  color: #0c4a6e;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* No Results Message - Dashboard Style */
+.no-results {
+  text-align: center;
+  padding: 48px 24px;
+  color: #6b7280;
+}
+
+.no-results i {
+  font-size: 48px;
+  color: #d1d5db;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.no-results h4 {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-weight: 600;
+  font-size: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.no-results p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Error Message - Dashboard Style */
+.error-message {
+  color: #dc2626;
+  text-align: center;
+  padding: 24px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background-color: #fef2f2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-message i {
+  font-size: 24px;
+  color: #ef4444;
+}
+
+/* Button Styles - Dashboard Design */
+.btn-primary {
+  background-color: #059669;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.btn-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Loading Spinner - Dashboard Style */
+.loading-spinner {
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #059669;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design - Updated */
+@media (max-width: 768px) {
+  .modal-container {
+    width: 95%;
+    margin: 10px;
+    max-height: 90vh;
+  }
+  
+  .modal-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+    padding: 20px;
+  }
+  
+  .modal-header h3 {
+    text-align: center;
+  }
+  
+  .header-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .search-container {
+    max-width: none;
+  }
+  
+  .exec-details {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .exec-info {
+    margin-right: 36px;
+  }
+  
+  .save-heart-btn {
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .modal-footer button {
+    width: 100%;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .modal-footer {
+    padding: 16px 20px 20px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-container {
+    width: 98%;
+    margin: 5px;
+  }
+  
+  .modal-header {
+    padding: 16px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    padding: 12px 16px 16px 16px;
+  }
+  
+  .delivery-exec-item {
+    padding: 14px;
+  }
+  
+  .exec-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .branch-group-title {
+    font-size: 15px;
+  }
+  
+  .exec-name {
+    font-size: 14px;
+  }
+  
+  .exec-details {
+    font-size: 12px;
+  }
+}
+
+/* Focus States for Accessibility - Dashboard Style */
+.search-input:focus,
+.btn-primary:focus,
+.btn-secondary:focus,
+.saved-toggle-btn:focus,
+.save-heart-btn:focus,
+.close-btn:focus {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  .delivery-exec-item {
+    border-width: 2px;
+  }
+  
+  .status-available,
+  .status-busy,
+  .status-driving {
+    border-width: 2px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .delivery-exec-item,
+  .btn-primary,
+  .btn-secondary,
+  .save-heart-btn,
+  .search-input {
+    transition: none;
+  }
+  
+  .skeleton-item {
+    animation: none;
+  }
+  
+  .loading-spinner {
+    animation: none;
+    border-top-color: transparent;
+  }
+  
+  .save-heart-btn.saving {
+    animation: none;
+  }
+}
+</style>
+<!-- Enhanced modal container -->
+<div id="deliveryExecutiveModal" class="modal-overlay" style="display: none;">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>Select Delivery Executive</h3>
+      <div class="header-controls">
+        <div class="search-container">
+          <input type="text" id="executiveSearch" placeholder="Search executives..." class="search-input">
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <button id="toggleSavedBtn" class="saved-toggle-btn" onclick="toggleSavedFilter()" title="Show saved executives">
+          <i class="fas fa-heart"></i>
+          <span class="saved-count">0</span>
+        </button>
+      </div>
+      <button class="close-btn" onclick="closeDeliveryModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="deliveryExecutivesList">
+        <!-- Content will be dynamically loaded -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeDeliveryModal()">Cancel</button>
+      <button id="assignBtn" class="btn-primary" onclick="assignDeliveryExecutive()" disabled>
+        Assign Selected
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+    let selectedExecutive = null;
+let currentOrderId = null;
+let allExecutives = [];
+let filteredExecutives = [];
+let showSavedOnly = false;
+let currentBranchInfo = null;
+
+// Main function called when button is clicked
+async function selectDeliveryExecutive(orderId) {
+  currentOrderId = orderId;
+  selectedExecutive = null;
+  showSavedOnly = false;
+  
+  // Reset UI state
+  document.getElementById('executiveSearch').value = '';
+  document.getElementById('toggleSavedBtn').classList.remove('active');
+  
+  // Show modal
+  document.getElementById('deliveryExecutiveModal').style.display = 'flex';
+  
+  // Reset assign button
+  const assignBtn = document.getElementById('assignBtn');
+  assignBtn.disabled = true;
+  
+  // Show skeleton loading
+  showSkeletonLoading();
+  
+  try {
+    await fetchDeliveryExecutives();
+  } catch (error) {
+    console.error('Error fetching delivery executives:', error);
+    showErrorMessage('Failed to load delivery executives. Please try again.');
+  }
+}
+
+// Show skeleton loading animation
+function showSkeletonLoading() {
+  const container = document.getElementById('deliveryExecutivesList');
+  container.innerHTML = '';
+  
+  // Create skeleton for current branch
+  const currentBranchSkeleton = document.createElement('div');
+  currentBranchSkeleton.className = 'branch-group';
+  currentBranchSkeleton.innerHTML = `
+    <div class="branch-group-header">
+      <div class="skeleton-name" style="width: 150px; height: 20px; background-color: #e2e2e2; border-radius: 4px;"></div>
+    </div>
+  `;
+  
+  // Add skeleton items for current branch
+  for (let i = 0; i < 3; i++) {
+    const skeletonItem = document.createElement('div');
+    skeletonItem.className = 'skeleton-item';
+    skeletonItem.innerHTML = `
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-content">
+        <div class="skeleton-name"></div>
+        <div class="skeleton-details"></div>
+      </div>
+    `;
+    currentBranchSkeleton.appendChild(skeletonItem);
+  }
+  
+  container.appendChild(currentBranchSkeleton);
+  
+  // Create skeleton for other branches
+  const otherBranchSkeleton = document.createElement('div');
+  otherBranchSkeleton.className = 'branch-group';
+  otherBranchSkeleton.innerHTML = `
+    <div class="branch-group-header">
+      <div class="skeleton-name" style="width: 180px; height: 20px; background-color: #e2e2e2; border-radius: 4px;"></div>
+    </div>
+  `;
+  
+  // Add skeleton items for other branches
+  for (let i = 0; i < 2; i++) {
+    const skeletonItem = document.createElement('div');
+    skeletonItem.className = 'skeleton-item';
+    skeletonItem.innerHTML = `
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-content">
+        <div class="skeleton-name"></div>
+        <div class="skeleton-details"></div>
+      </div>
+    `;
+    otherBranchSkeleton.appendChild(skeletonItem);
+  }
+  
+  container.appendChild(otherBranchSkeleton);
+}
+
+// Fetch delivery executives from API
+async function fetchDeliveryExecutives() {
+  try {
+    const response = await fetch('/api/orders/delivery-executives', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add auth headers if needed
+        // 'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      allExecutives = result.data;
+      currentBranchInfo = result.data.currentBranch;
+      filteredExecutives = getAllExecutivesList();
+      updateSavedCount();
+      displayDeliveryExecutives();
+    } else {
+      throw new Error(result.message || 'Failed to fetch delivery executives');
+    }
+    
+  } catch (error) {
+    console.error('Fetch error:', error);
+    showErrorMessage(error.message || 'Network error occurred');
+  }
+}
+
+// Get combined list of all executives
+function getAllExecutivesList() {
+  const current = allExecutives.currentBranchExecutives || [];
+  const other = allExecutives.otherBranchExecutives || [];
+  return [...current, ...other];
+}
+
+// Update saved executives count
+function updateSavedCount() {
+  const savedCount = getAllExecutivesList().filter(exec => exec.isSaved).length;
+  const countElement = document.querySelector('.saved-count');
+  countElement.textContent = savedCount;
+  countElement.classList.toggle('zero', savedCount === 0);
+}
+
+// Toggle saved executives filter
+function toggleSavedFilter() {
+  showSavedOnly = !showSavedOnly;
+  const toggleBtn = document.getElementById('toggleSavedBtn');
+  toggleBtn.classList.toggle('active', showSavedOnly);
+  
+  applyFilters();
+}
+
+// Apply search and saved filters
+function applyFilters() {
+  const searchTerm = document.getElementById('executiveSearch').value.toLowerCase().trim();
+  const allExecs = getAllExecutivesList();
+  
+  filteredExecutives = allExecs.filter(exec => {
+    // Apply saved filter
+    if (showSavedOnly && !exec.isSaved) {
+      return false;
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+      const nameMatch = exec.name.toLowerCase().includes(searchTerm);
+      const phoneMatch = exec.phone && exec.phone.includes(searchTerm);
+      const branchMatch = exec.branches && exec.branches.some(branch => 
+        branch.name.toLowerCase().includes(searchTerm)
+      );
+      
+      if (!nameMatch && !phoneMatch && !branchMatch) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+  
+  displayDeliveryExecutives();
+}
+
+// Display delivery executives in the modal
+function displayDeliveryExecutives() {
+  const container = document.getElementById('deliveryExecutivesList');
+  container.innerHTML = '';
+  
+  if (showSavedOnly) {
+    displaySavedExecutives();
+    return;
+  }
+  
+  // Group filtered executives by current/other branch
+  const currentBranchExecs = filteredExecutives.filter(exec => 
+    allExecutives.currentBranchExecutives.includes(exec)
+  );
+  const otherBranchExecs = filteredExecutives.filter(exec => 
+    allExecutives.otherBranchExecutives.includes(exec)
+  );
+  
+  // Display current branch group
+  displayBranchGroup(
+    container, 
+    'Current Branch Executives', 
+    currentBranchExecs, 
+    true
+  );
+  
+  // Display other branch group
+  displayBranchGroup(
+    container, 
+    'Other Branch Executives', 
+    otherBranchExecs, 
+    false
+  );
+  
+  // Show no results message if needed
+  if (filteredExecutives.length === 0) {
+    showNoResultsMessage(container);
+  }
+}
+
+// Display saved executives only
+function displaySavedExecutives() {
+  const container = document.getElementById('deliveryExecutivesList');
+  
+  if (filteredExecutives.length === 0) {
+    container.innerHTML = `
+      <div class="no-results">
+        <i class="fas fa-heart-broken"></i>
+        <h4>No Saved Executives</h4>
+        <p>You haven't saved any delivery executives yet.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Create saved executives group
+  const savedGroup = document.createElement('div');
+  savedGroup.className = 'branch-group';
+  savedGroup.innerHTML = `
+    <div class="branch-group-header">
+      <h4 class="branch-group-title">
+        <i class="fas fa-heart" style="color: #ff6b6b; margin-right: 8px;"></i>
+        Saved Executives
+      </h4>
+      <span class="branch-group-count">${filteredExecutives.length}</span>
+    </div>
+  `;
+  
+  filteredExecutives.forEach(exec => {
+    const execItem = createExecutiveItem(exec, false);
+    savedGroup.appendChild(execItem);
+  });
+  
+  container.appendChild(savedGroup);
+}
+
+// Display branch group
+function displayBranchGroup(container, title, executives, isCurrentBranch) {
+  const group = document.createElement('div');
+  group.className = 'branch-group';
+  
+  // Create group header
+  const header = document.createElement('div');
+  header.className = 'branch-group-header';
+  header.innerHTML = `
+    <h4 class="branch-group-title">${title}</h4>
+    <span class="branch-group-count">${executives.length}</span>
+  `;
+  group.appendChild(header);
+  
+  // Handle empty current branch
+  if (isCurrentBranch && executives.length === 0) {
+    const notification = document.createElement('div');
+    notification.className = 'empty-branch-notification';
+    notification.innerHTML = `
+      <i class="fas fa-info-circle"></i>
+      <div><strong>No executives available in current branch</strong></div>
+      <div>Please check other branch executives below</div>
+    `;
+    group.appendChild(notification);
+  }
+  
+  // Add executives
+  executives.forEach(exec => {
+    const execItem = createExecutiveItem(exec, !isCurrentBranch);
+    group.appendChild(execItem);
+  });
+  
+  if (executives.length > 0 || isCurrentBranch) {
+    container.appendChild(group);
+  }
+}
+
+// Create individual executive item
+function createExecutiveItem(exec, showBranches) {
+  const execItem = document.createElement('div');
+  execItem.className = `delivery-exec-item ${getStatusAvailability(exec.status) ? '' : 'unavailable'}`;
+  execItem.dataset.execId = exec.id;
+  
+  // Create branch info string for other branch executives
+  const branchInfo = showBranches && exec.branches ? 
+    `<div class="exec-branches">
+      <i class="fas fa-map-marker-alt"></i> 
+      ${exec.branches.map(branch => branch.name).join(', ')}
+    </div>` : '';
+  
+  execItem.innerHTML = `
+    <img src="${exec.avatar || '/default-avatar.png'}" alt="${exec.name}" class="exec-avatar" 
+         onerror="this.src='/default-avatar.png'">
+    <div class="exec-info">
+      <div class="exec-name">${exec.name}</div>
+      <div class="exec-details">
+        <span><i class="fas fa-phone"></i> ${exec.phone || 'N/A'}</span>
+        <span><i class="fas fa-box"></i> Orders: ${exec.currentOrders || 0}/${exec.todayOrders || 0}</span>
+        ${exec.rating ? `<span><i class="fas fa-star"></i> ${exec.rating}</span>` : ''}
+        <span class="exec-status ${getStatusClass(exec.status)}">
+          ${getStatusIcon(exec.status)} ${capitalizeFirst(exec.status || 'busy')}
+        </span>
+      </div>
+      ${branchInfo}
+    </div>
+    <button class="save-heart-btn ${exec.isSaved ? 'saved' : ''}" 
+            onclick="toggleSaveExecutive(event, '${exec.id}')" 
+            title="${exec.isSaved ? 'Remove from saved' : 'Save executive'}">
+      <i class="fas fa-heart"></i>
+    </button>
+  `;
+  
+  // Add click event listener only if available
+  if (getStatusAvailability(exec.status)) {
+    execItem.addEventListener('click', (e) => {
+      // Don't select if clicking on heart button
+      if (!e.target.closest('.save-heart-btn')) {
+        selectExecutive(exec, execItem);
+      }
+    });
+  }
+  
+  return execItem;
+}
+
+// Get status availability
+function getStatusAvailability(status) {
+  return status === 'available' || status === 'driving';
+}
+
+// Get status CSS class
+function getStatusClass(status) {
+  switch(status) {
+    case 'available': return 'status-available';
+    case 'busy': return 'status-busy';
+    case 'driving': return 'status-driving';
+    default: return 'status-busy';
+  }
+}
+
+// Get status icon
+function getStatusIcon(status) {
+  switch(status) {
+    case 'available': return '🟢';
+    case 'busy': return '🔴';
+    case 'driving': return '🚗';
+    default: return '⚫';
+  }
+}
+
+// Capitalize first letter
+function capitalizeFirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Show no results message
+function showNoResultsMessage(container) {
+  container.innerHTML = `
+    <div class="no-results">
+      <i class="fas fa-search"></i>
+      <h4>No Results Found</h4>
+      <p>Try adjusting your search criteria or filters.</p>
+    </div>
+  `;
+}
+
+// Toggle save executive
+async function toggleSaveExecutive(event, executiveId) {
+  event.stopPropagation();
+  
+  const heartBtn = event.currentTarget;
+  const isSaved = heartBtn.classList.contains('saved');
+  
+  // Show loading state
+  heartBtn.classList.add('saving');
+  
+  try {
+    const response = await fetch(`/api/delivery-executives/${executiveId}/toggle-save`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add auth headers if needed
+      }
+    });
+
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      // Update local state
+      const executive = getAllExecutivesList().find(exec => exec.id === executiveId);
+      if (executive) {
+        executive.isSaved = result.data.isSaved;
+      }
+      
+      // Update UI
+      heartBtn.classList.toggle('saved', result.data.isSaved);
+      heartBtn.title = result.data.isSaved ? 'Remove from saved' : 'Save executive';
+      
+      // Update saved count
+      updateSavedCount();
+      
+      // Refresh display if showing saved only and executive was unsaved
+      if (showSavedOnly && !result.data.isSaved) {
+        applyFilters();
+      }
+      
+    } else {
+      throw new Error(result.message || 'Failed to save executive');
+    }
+    
+  } catch (error) {
+    console.error('Save toggle error:', error);
+    // You can show a toast notification here
+    alert('Failed to save executive. Please try again.');
+  } finally {
+    heartBtn.classList.remove('saving');
+  }
+}
+
+// Handle executive selection
+function selectExecutive(executive, element) {
+  // Remove previous selection
+  document.querySelectorAll('.delivery-exec-item.selected').forEach(item => {
+    item.classList.remove('selected');
+  });
+  
+  // Add selection to current item
+  element.classList.add('selected');
+  selectedExecutive = executive;
+  
+  // Enable assign button
+  document.getElementById('assignBtn').disabled = false;
+}
+
+// Assign selected delivery executive
+async function assignDeliveryExecutive() {
+  if (!selectedExecutive || !currentOrderId) {
+    alert('Please select a delivery executive');
+    return;
+  }
+  
+  const assignBtn = document.getElementById('assignBtn');
+  const originalText = assignBtn.innerHTML;
+  
+  // Show loading state
+  assignBtn.disabled = true;
+  assignBtn.innerHTML = '<span class="loading-spinner"></span>Assigning...';
+  
+  try {
+    const response = await fetch(`/api/orders/${currentOrderId}/assign-delivery`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add auth headers if needed
+      },
+      body: JSON.stringify({
+        deliveryExecutiveId: selectedExecutive.id
+      })
+    });
+
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      // Success - update UI and close modal
+      showSuccessMessage('Delivery executive assigned successfully!');
+      updateOrderRow(currentOrderId, selectedExecutive);
+      closeDeliveryModal();
+    } else {
+      throw new Error(result.message || 'Failed to assign delivery executive');
+    }
+    
+  } catch (error) {
+    console.error('Assignment error:', error);
+    showErrorMessage(error.message || 'Failed to assign delivery executive');
+  } finally {
+    // Reset button state
+    assignBtn.disabled = false;
+    assignBtn.innerHTML = originalText;
+  }
+}
+
+// Update the order row in the table after successful assignment
+function updateOrderRow(orderId, executive) {
+  const button = document.querySelector(`button[onclick="selectDeliveryExecutive('${orderId}')"]`);
+  if (button) {
+    button.innerHTML = `${executive.name} <i class="fas fa-chevron-down fa-sm"></i>`;
+  }
+}
+
+// Close modal
+function closeDeliveryModal() {
+  document.getElementById('deliveryExecutiveModal').style.display = 'none';
+  selectedExecutive = null;
+  currentOrderId = null;
+  showSavedOnly = false;
+  
+  // Reset search and filters
+  document.getElementById('executiveSearch').value = '';
+  document.getElementById('toggleSavedBtn').classList.remove('active');
+}
+
+// Show error message in modal
+function showErrorMessage(message) {
+  const container = document.getElementById('deliveryExecutivesList');
+  container.innerHTML = `
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      ${message}
+    </div>
+  `;
+}
+
+// Show success message
+function showSuccessMessage(message) {
+  // You can replace this with your notification system
+  alert(message);
+}
+
+// Search functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('executiveSearch');
+  if (searchInput) {
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        applyFilters();
+      }, 300);
+    });
+  }
+});
+
+// Close modal when clicking outside
+document.getElementById('deliveryExecutiveModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeDeliveryModal();
+  }
+});
+
+// Handle escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('deliveryExecutiveModal').style.display === 'flex') {
+    closeDeliveryModal();
+  }
+});
+</script>

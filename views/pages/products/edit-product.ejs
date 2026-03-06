@@ -1,0 +1,2150 @@
+<%- include('../../partials/Header') %>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>iGrab Cafe - Edit Product</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+        <style>
+            .brand-teal {
+                background-color: #1E7065;
+            }
+
+            .brand-teal-light {
+                background-color: #2F8A7B;
+            }
+
+            .brand-orange {
+                background-color: #F59E0B;
+            }
+
+            .text-brand-teal {
+                color: #1E7065;
+            }
+
+            .border-brand-teal {
+                border-color: #1E7065;
+            }
+
+            .hover-brand-teal:hover {
+                background-color: #1E7065;
+            }
+
+            .form-section {
+                transition: all 0.3s ease;
+            }
+
+            .form-section.active {
+                border-left: 4px solid #1E7065;
+            }
+
+            .drag-area {
+                border: 2px dashed #cbd5e0;
+                transition: all 0.3s ease;
+                min-height: 120px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .drag-area.drag-over {
+                border-color: #1E7065;
+                background-color: #f0f9f7;
+            }
+
+            .image-preview {
+                position: relative;
+                overflow: hidden;
+                border-radius: 8px;
+                aspect-ratio: 1;
+            }
+
+            .image-preview img {
+                transition: transform 0.3s ease;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .image-preview:hover img {
+                transform: scale(1.05);
+            }
+
+            .image-preview .remove-btn {
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                position: absolute;
+                inset: 0;
+                background-color: rgba(0, 0, 0, 0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10;
+            }
+
+            .image-preview:hover .remove-btn {
+                opacity: 1;
+            }
+
+            .existing-image {
+                border: 2px solid #10B981;
+            }
+
+            .new-image {
+                border: 2px solid #3B82F6;
+            }
+
+            .tag-input {
+                min-height: 42px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                padding: 8px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                align-items: center;
+                cursor: text;
+            }
+
+            .tag-chip {
+                background-color: #1E7065;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 16px;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                white-space: nowrap;
+            }
+
+            .tag-chip button {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                font-size: 14px;
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: background-color 0.2s;
+            }
+
+            .tag-chip button:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+
+            .loading-spinner {
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #1E7065;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                animation: spin 1s linear infinite;
+                display: inline-block;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+            }
+
+            .modal.show {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background-color: white;
+                padding: 24px;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 500px;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+
+            .fade-in {
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .error-message {
+                color: #dc2626;
+                font-size: 12px;
+                margin-top: 4px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .success-message {
+                color: #059669;
+                font-size: 12px;
+                margin-top: 4px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 16px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+                z-index: 1001;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            }
+
+            .notification.show {
+                transform: translateX(0);
+            }
+
+            .notification.success {
+                background-color: #059669;
+            }
+
+            .notification.error {
+                background-color: #dc2626;
+            }
+
+            .notification.warning {
+                background-color: #f59e0b;
+            }
+
+            .file-input-label {
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .file-input-label:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(30, 112, 101, 0.3);
+            }
+
+            .image-upload-modal {
+                min-height: 200px;
+            }
+
+            .upload-progress {
+                height: 4px;
+                background-color: #e5e7eb;
+                border-radius: 2px;
+                overflow: hidden;
+                margin-top: 8px;
+            }
+
+            .upload-progress-bar {
+                height: 100%;
+                background-color: #1E7065;
+                transition: width 0.3s ease;
+                width: 0%;
+            }
+
+            .changed-field {
+                position: relative;
+            }
+
+            .changed-field::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 8px;
+                height: 8px;
+                background-color: #f59e0b;
+                border-radius: 50%;
+            }
+
+            /* Mobile Navigation Fixes */
+            @media (max-width: 768px) {
+                .modal-content {
+                    width: 95%;
+                    margin: 10px;
+                    padding: 16px;
+                }
+
+                .tag-input {
+                    min-height: 48px;
+                }
+
+                .drag-area {
+                    min-height: 100px;
+                    padding: 16px;
+                }
+
+                #bottom-btn-box {
+                    margin-bottom: 85px;
+                }
+
+                /* Mobile Navigation Button Fixes */
+                .nav-actions {
+                    flex-direction: column;
+                    gap: 8px;
+                    width: 100%;
+                }
+
+                .nav-button {
+                    width: 100%;
+                    min-height: 44px;
+                    font-size: 14px;
+                    padding: 8px 12px;
+                    justify-content: center;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .nav-header {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 12px;
+                }
+
+                .nav-title-section {
+                    justify-content: center;
+                }
+            }
+
+            @media (max-width: 640px) {
+                .nav-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    width: 100%;
+                }
+
+                .nav-button {
+                    width: 100%;
+                    min-height: 44px;
+                    padding: 10px 16px;
+                    font-size: 14px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                }
+            }
+
+            .branch-card {
+                transition: all 0.3s ease;
+                border: 2px solid transparent;
+            }
+
+            .branch-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .branch-card.selected {
+                border-color: #1E7065;
+                background-color: #f0f9f7;
+            }
+
+            .profit-display {
+                background: linear-gradient(135deg, #f0f9f7 0%, #e8f5f3 100%);
+                border: 1px solid #1E7065;
+            }
+
+            .breadcrumb {
+                background-color: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+            }
+        </style>
+    </head>
+
+    <body class="bg-gray-50">
+        <!-- Navigation Header -->
+        <!-- <nav class="brand-teal text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 nav-header">
+                <div class="flex items-center nav-title-section">
+                    <button id="backBtn" class="mr-4 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="text-xl font-bold">Edit Product</h1>
+                </div>
+                <div class="flex items-center space-x-4 nav-actions">
+                    <button id="viewProductBtn" class="nav-button px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-eye mr-2"></i>View Product
+                    </button>
+                    <button id="saveDraftBtn" class="nav-button px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save Draft
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav> -->
+        <nav class="brand-teal text-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <button id="backBtn"
+                            class="mr-4 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h1 class="text-xl font-bold">Edit Product</h1>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <nav class="flex items-center space-x-2 text-sm">
+                    <a href="/products" class="text-gray-600 hover:text-brand-teal">Products</a>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                    <span id="productNameBreadcrumb" class="text-gray-900 font-medium">Loading...</span>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                    <span class="text-gray-500">Edit</span>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Product Info Header -->
+        <div class="bg-white border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex items-center space-x-4 mb-4 lg:mb-0">
+                        <div id="productImage" class="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                            <img src="" alt="Product" class="w-full h-full object-cover hidden">
+                        </div>
+                        <div>
+                            <h2 id="productTitle" class="text-xl font-bold text-gray-900">Loading...</h2>
+                            <p id="productMeta" class="text-sm text-gray-500">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div id="lastUpdated" class="text-xs text-gray-500">
+                            Last updated: Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <form id="productForm" class="space-y-8">
+                <!-- Section 1: Basic Information -->
+                <div class="form-section active bg-white rounded-lg shadow-sm border p-6 fade-in" id="section1">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-info-circle text-brand-teal mr-2"></i>
+                            Product Information
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Product Name -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="nameEn" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Product Name (English) *
+                                </label>
+                                <input type="text" id="nameEn" name="name.en" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                    placeholder="Enter product name in English">
+                                <div class="error-message" id="nameEnError"></div>
+                            </div>
+
+                            <div>
+                                <label for="nameAr" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Product Name (Arabic) *
+                                </label>
+                                <input type="text" id="nameAr" name="name.ar" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                    placeholder="أدخل اسم المنتج بالعربية" dir="rtl">
+                                <div class="error-message" id="nameArError"></div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="descriptionEn" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Description (English) *
+                                </label>
+                                <textarea id="descriptionEn" name="description.en" required rows="3"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
+                                    placeholder="Describe your product in English"></textarea>
+                                <div class="error-message" id="descriptionEnError"></div>
+                            </div>
+
+                            <div>
+                                <label for="descriptionAr" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Description (Arabic) *
+                                </label>
+                                <textarea id="descriptionAr" name="description.ar" required rows="3"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
+                                    placeholder="وصف المنتج بالعربية" dir="rtl"></textarea>
+                                <div class="error-message" id="descriptionArError"></div>
+                            </div>
+                        </div>
+
+                        <!-- Slug -->
+                        <div>
+                            <label for="slug" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Product Slug
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="slug" name="meta.slug" readonly
+                                    class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                                    placeholder="Auto-generated from English name">
+                                <button type="button" id="editSlugBtn"
+                                    class="absolute right-2 top-2 px-3 py-2 text-sm text-brand-teal hover:bg-gray-100 rounded transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">URL-friendly version of your product name</p>
+                            <div class="error-message" id="slugError"></div>
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label for="categoryId" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Category *
+                            </label>
+                            <div class="flex space-x-2">
+                                <select id="categoryId" name="categoryId" required
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                    <option value="">Select a category</option>
+                                </select>
+                                <button type="button" id="addCategoryBtn"
+                                    class="px-4 py-3 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="error-message" id="categoryError"></div>
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="lg:col-span-2">
+                            <label for="brandId" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Brand (Optional)
+                            </label>
+                            <div class="flex space-x-2">
+                                <select id="brandId" name="brandId"
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                    <option value="">Select a brand</option>
+                                </select>
+                                <button type="button" id="addBrandBtn"
+                                    class="px-4 py-3 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Branch Availability -->
+                <div class="form-section bg-white rounded-lg shadow-sm border p-6 fade-in" id="section2">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-store text-brand-teal mr-2"></i>
+                            Branch Availability
+                        </h2>
+                        <div class="text-sm text-gray-500">
+                            <span id="selectedBranchCount">0</span> branches selected
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-4">
+                                Select Branches Where This Product Will Be Available *
+                            </label>
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex space-x-2">
+                                    <button type="button" id="selectAllBranches"
+                                        class="px-3 py-1 text-sm border border-brand-teal text-brand-teal rounded hover:bg-teal-50 transition-colors">
+                                        Select All
+                                    </button>
+                                    <button type="button" id="clearAllBranches"
+                                        class="px-3 py-1 text-sm border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="branchesContainer">
+                                <!-- Branches will be populated here -->
+                            </div>
+                            <div class="error-message" id="branchError"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Pricing Information -->
+                <div class="form-section bg-white rounded-lg shadow-sm border p-6 fade-in" id="section3">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-dollar-sign text-brand-teal mr-2"></i>
+                            Pricing Information
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label for="price" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Selling Price *
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="price" name="pricing.price" required min="0" step="0.01"
+                                    class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    placeholder="0.00">
+                                <div class="absolute left-3 top-3 text-gray-500 font-medium">AED</div>
+                            </div>
+                            <div class="error-message" id="priceError"></div>
+                        </div>
+
+                        <div>
+                            <label for="costPerItem" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Cost Per Item *
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="costPerItem" name="pricing.costPerItem" required min="0"
+                                    step="0.01"
+                                    class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    placeholder="0.00">
+                                <div class="absolute left-3 top-3 text-gray-500 font-medium">AED</div>
+                            </div>
+                            <div class="error-message" id="costError"></div>
+                        </div>
+
+                        <div>
+                            <label for="currency" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Currency
+                            </label>
+                            <input type="text" id="currency" name="pricing.currency" value="AED" readonly
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-medium">
+                        </div>
+                    </div>
+
+                    <div class="profit-display p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Profit Analysis</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600 mb-1">Profit Amount</div>
+                                <div id="profitAmount" class="text-xl font-bold text-green-600">AED 0.00</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600 mb-1">Profit Margin</div>
+                                <div id="profitMargin" class="text-xl font-bold text-green-600">0%</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600 mb-1">Markup</div>
+                                <div id="markup" class="text-xl font-bold text-blue-600">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Images -->
+                <div class="form-section bg-white rounded-lg shadow-sm border p-6 fade-in" id="section4">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-images text-brand-teal mr-2"></i>
+                            Product Images
+                        </h2>
+                        <div class="text-sm text-gray-500">
+                            <span id="imageCount">0</span> images total
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Existing Images -->
+                        <div id="existingImagesSection">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Current Images</h3>
+                            <div id="existingImagesContainer"
+                                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                                <!-- Existing images will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Area -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Add New Images</h3>
+                            <div class="drag-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+                                id="imageUploadArea">
+                                <div class="space-y-4">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                                    <div>
+                                        <p class="text-lg font-medium text-gray-600">Drag and drop images here</p>
+                                        <p class="text-sm text-gray-500">or click to browse (<span
+                                                id="imageLimitText"></span>)</p>
+                                    </div>
+                                    <label for="imageInput"
+                                        class="file-input-label brand-teal text-white px-6 py-3 rounded-lg hover:brand-teal-light transition-all inline-block cursor-pointer">
+                                        <i class="fas fa-folder-open mr-2"></i>Browse Images
+                                    </label>
+                                    <input type="file" id="imageInput" multiple accept="image/*" class="hidden">
+                                </div>
+                                <div class="upload-progress hidden">
+                                    <div class="upload-progress-bar"></div>
+                                </div>
+                            </div>
+
+                            <!-- New Image Previews -->
+                            <div id="newImagePreviewContainer"
+                                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                                <!-- New image previews will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Meta Information -->
+                <div class="form-section bg-white rounded-lg shadow-sm border p-6 fade-in" id="section5">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-tags text-brand-teal mr-2"></i>
+                            SEO & Meta Information
+                        </h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Keywords/Tags
+                            </label>
+                            <div class="tag-input" id="tagInput">
+                                <input type="text" id="tagInputField" placeholder="Type and press Enter to add tags"
+                                    class="flex-1 border-none outline-none bg-transparent min-w-32">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Add relevant keywords to help customers find your
+                                product. Press Enter to add each tag.</p>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <button type="button"
+                                    class="suggested-tag px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                    data-tag="coffee">coffee</button>
+                                <button type="button"
+                                    class="suggested-tag px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                    data-tag="hot">hot</button>
+                                <button type="button"
+                                    class="suggested-tag px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                    data-tag="cold">cold</button>
+                                <button type="button"
+                                    class="suggested-tag px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                    data-tag="sweet">sweet</button>
+                                <button type="button"
+                                    class="suggested-tag px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                    data-tag="pastry">pastry</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div id="bottom-btn-box" class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="flex space-x-4">
+                            <button type="button" id="cancelBtn"
+                                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+
+                        <div class="flex space-x-4">
+                            <button type="submit" id="submitBtn"
+                                class="px-6 py-3 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                <i class="fas fa-save mr-2"></i>Update Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </main>
+
+        <!-- Add Category Modal -->
+        <div id="categoryModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Add New Category</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('categoryModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="categoryForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Category Name (English)
+                                *</label>
+                            <input type="text" id="categoryNameEn" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Category Name (Arabic)
+                                *</label>
+                            <input type="text" id="categoryNameAr" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                dir="rtl">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Category Image</label>
+                            <div
+                                class="image-upload-modal border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                <div id="categoryImageUpload">
+                                    <i class="fas fa-image text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-600 mb-2">Click to upload category image</p>
+                                    <label for="categoryImageInput"
+                                        class="cursor-pointer brand-teal text-white px-4 py-2 rounded text-sm hover:brand-teal-light transition-colors inline-block">
+                                        Choose Image
+                                    </label>
+                                    <input type="file" id="categoryImageInput" accept="image/*" class="hidden">
+                                </div>
+                                <div id="categoryImagePreview" class="hidden">
+                                    <img id="categoryImageImg" src="" alt="Category Preview"
+                                        class="w-full h-32 object-cover rounded">
+                                    <button type="button" id="removeCategoryImage"
+                                        class="mt-2 text-red-600 hover:text-red-800 text-sm">
+                                        <i class="fas fa-trash mr-1"></i>Remove Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" onclick="closeModal('categoryModal')"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                <span class="btn-text">Add Category</span>
+                                <span class="btn-loading hidden">
+                                    <div class="loading-spinner"></div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Brand Modal -->
+        <div id="brandModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Add New Brand</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('brandModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="brandForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name (English) *</label>
+                            <input type="text" id="brandNameEn" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name (Arabic) *</label>
+                            <input type="text" id="brandNameAr" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                dir="rtl">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tagline (English)</label>
+                            <input type="text" id="brandTaglineEn"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tagline (Arabic)</label>
+                            <input type="text" id="brandTaglineAr"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                dir="rtl">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Logo</label>
+                            <div
+                                class="image-upload-modal border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                <div id="brandLogoUpload">
+                                    <i class="fas fa-image text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-600 mb-2">Click to upload brand logo</p>
+                                    <label for="brandLogoInput"
+                                        class="cursor-pointer brand-teal text-white px-4 py-2 rounded text-sm hover:brand-teal-light transition-colors inline-block">
+                                        Choose Logo
+                                    </label>
+                                    <input type="file" id="brandLogoInput" accept="image/*" class="hidden">
+                                </div>
+                                <div id="brandLogoPreview" class="hidden">
+                                    <img id="brandLogoImg" src="" alt="Logo Preview"
+                                        class="w-full h-32 object-contain rounded">
+                                    <button type="button" id="removeBrandLogo"
+                                        class="mt-2 text-red-600 hover:text-red-800 text-sm">
+                                        <i class="fas fa-trash mr-1"></i>Remove Logo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" onclick="closeModal('brandModal')"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                <span class="btn-text">Add Brand</span>
+                                <span class="btn-loading hidden">
+                                    <div class="loading-spinner"></div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification" class="notification">
+            <span id="notificationText"></span>
+            <button onclick="hideNotification()" class="ml-3 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <script>
+            // State Management
+            let productData = {};
+            let originalProductData = {};
+            let existingImages = [];
+            let newImages = [];
+            let imagesToDelete = [];
+            let tags = [];
+            let selectedBranches = [];
+            let categories = [];
+            let brands = [];
+            let stores = [];
+            let categoryImageFile = null;
+            let brandLogoFile = null;
+            let hasUnsavedChanges = false;
+            let IMAGE_LIMIT = 10; // Default limit
+            let IMAGE_SIZE_LIMIT = 5; // Default in MB
+
+            // Initialize with EJS data
+            try {
+                const safeParse = (str) => JSON.parse(decodeURIComponent(str));
+
+                productData = safeParse('<%- encodeURIComponent(JSON.stringify(product || {})) %>');
+                IMAGE_LIMIT = Number("<%= imageLimit %>") || 10;
+                IMAGE_SIZE_LIMIT = Number("<%= imageSizeLimit %>") || 5;
+                originalProductData = JSON.parse(JSON.stringify(productData));
+                categories = safeParse('<%- encodeURIComponent(JSON.stringify(categories || [])) %>');
+                brands = safeParse('<%- encodeURIComponent(JSON.stringify(brands || [])) %>');
+                stores = safeParse('<%- encodeURIComponent(JSON.stringify(stores || [])) %>');
+
+                if (!productData || !productData._id) {
+                    console.error('Critical Error: Product data ID is missing.');
+                }
+            } catch (e) {
+                console.error('Error parsing EJS data:', e);
+                window.onload = () => {
+                    showNotification('Critical Error: Failed to load product data from server. Trace: ' + e.message, 'error');
+                };
+            }
+
+
+
+            // API Functions
+            class ProductAPI {
+                static async updateProduct(productId, productData) {
+                    try {
+                        // Simulate API call
+                        const response = await fetch('/product/edit', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ productId, productData })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Update Product Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async deleteProductImage(productId, imageUrl) {
+                    try {
+                        // Simulate API call
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        console.log('Deleting image:', imageUrl);
+                        return { success: true };
+                    } catch (error) {
+                        console.error('Delete Image Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async createCategory(categoryData) {
+                    try {
+
+                        // Simulate API call
+
+                        console.log('Creating category with data:', categoryData);
+                        const formData = new FormData();
+                        formData.append('name[en]', categoryData.name.en);
+                        formData.append('name[ar]', categoryData.name.ar);
+                        if (categoryData.imageFile) {
+                            formData.append('image', categoryData.imageFile);
+                        }
+                        console.log('Creating category with data:', categoryData);
+                        const response = await fetch('/categories', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Create Category Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async createBrand(brandData) {
+                    try {
+                        // Simulate API call
+                        const formData = new FormData();
+                        formData.append('name[en]', brandData.name.en);
+                        formData.append('name[ar]', brandData.name.ar);
+                        if (brandData.tagline.en) formData.append('tagline[en]', brandData.tagline.en);
+                        if (brandData.tagline.ar) formData.append('tagline[ar]', brandData.tagline.ar);
+                        if (brandData.logoFile) {
+                            formData.append('logo', brandData.logoFile);
+                        }
+
+                        const response = await fetch('/brands', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Create Brand Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async uploadImages(files) {
+                    try {
+                        // Simulate API call
+                        const formData = new FormData();
+                        for (let file of files) {
+                            formData.append('images', file);
+                        }
+
+                        const response = await fetch('/upload/images', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Upload Images Error:', error);
+                        throw error;
+                    }
+                }
+            }
+
+            // Utility Functions
+            function generateSlug(text) {
+                return text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            function showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                const notificationText = document.getElementById('notificationText');
+
+                notificationText.textContent = message;
+                notification.className = `notification ${type} show`;
+
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+
+            function hideNotification() {
+                document.getElementById('notification').classList.remove('show');
+            }
+
+            function clearError(fieldId) {
+                const errorElement = document.getElementById(fieldId + 'Error');
+                if (errorElement) {
+                    errorElement.textContent = '';
+                }
+            }
+
+            function showError(fieldId, message) {
+                const errorElement = document.getElementById(fieldId + 'Error');
+                if (errorElement) {
+                    errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                }
+            }
+
+            function markFieldAsChanged(fieldId) {
+                const field = document.getElementById(fieldId);
+                if (field && !field.classList.contains('changed-field')) {
+                    field.classList.add('changed-field');
+                    hasUnsavedChanges = true;
+                }
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return 'Never';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            function populateProductData() {
+                if (!productData || !productData._id) {
+                    showNotification('Product data not found or invalid', 'error');
+                    // Set meaningful defaults for breadcrumbs and title
+                    const nameBreadcrumb = document.getElementById('productNameBreadcrumb');
+                    if (nameBreadcrumb) nameBreadcrumb.textContent = 'Error: Product Not Found';
+                    const productTitle = document.getElementById('productTitle');
+                    if (productTitle) productTitle.textContent = 'Product Not Found';
+                    return;
+                }
+
+                try {
+                    console.log('Populating product data for ID:', productData._id);
+
+                    // Basic Information
+                    const setVal = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = val || '';
+                    };
+
+                    setVal('nameEn', productData.name?.en);
+                    setVal('nameAr', productData.name?.ar);
+                    setVal('descriptionEn', productData.description?.en);
+                    setVal('descriptionAr', productData.description?.ar);
+                    setVal('slug', productData.meta?.slug);
+
+                    // Pricing
+                    setVal('price', productData.pricing?.price);
+                    setVal('costPerItem', productData.pricing?.costPerItem);
+
+                    // Category and Brand
+                    setVal('categoryId', productData.categoryId);
+                    setVal('brandId', productData.brandId);
+
+                    // Branch Selection
+                    selectedBranches = (productData.branchIds || []).map(id => id ? id.toString() : '');
+
+                    // Tags/Keywords
+                    tags = productData.meta?.keywords || [];
+
+                    // Images
+                    existingImages = productData.images || [];
+
+                    // Header Information
+                    const nameDisp = productData.name?.en || 'Unnamed Product';
+                    const breadcrumb = document.getElementById('productNameBreadcrumb');
+                    if (breadcrumb) breadcrumb.textContent = nameDisp;
+                    const title = document.getElementById('productTitle');
+                    if (title) title.textContent = nameDisp;
+
+                    const metaEl = document.getElementById('productMeta');
+                    if (metaEl) {
+                        metaEl.textContent = `Category: ${getCategoryName(productData.categoryId)} | Brand: ${getBrandName(productData.brandId)}`;
+                    }
+
+                    // Product image in header
+                    const headerImg = document.querySelector('#productImage img');
+                    if (headerImg && existingImages.length > 0) {
+                        const imgPath = existingImages[0];
+                        headerImg.src = (imgPath.startsWith('/') || imgPath.startsWith('http')) ? imgPath : '/' + imgPath;
+                        headerImg.classList.remove('hidden');
+                    }
+
+                    // Update last modified
+                    const lastUpdatedEl = document.getElementById('lastUpdated');
+                    if (lastUpdatedEl) {
+                        lastUpdatedEl.textContent = `Last updated: ${formatDate(productData.updatedAt)}`;
+                    }
+
+                    // Update profit calculation
+                    updateProfitCalculation();
+
+                    // Render components
+                    renderBranches();
+                    renderTags();
+                    renderExistingImages();
+                    updateSelectedBranchCount();
+                    updateImageCount();
+
+                } catch (error) {
+                    console.error('Error in populateProductData:', error);
+                    showNotification('Occurred an error while populating the form: ' + error.message, 'error');
+                }
+            }
+
+            function getCategoryName(categoryId) {
+                const category = categories.find(cat => cat._id === categoryId);
+                return category?.name?.en || 'Unknown';
+            }
+
+            function getBrandName(brandId) {
+                if (!brandId) return 'No brand';
+                const brand = brands.find(b => b._id === brandId);
+                return brand?.name?.en || 'Unknown';
+            }
+
+            function validateForm() {
+                let isValid = true;
+
+                // Clear previous errors
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.textContent = '';
+                    el.className = 'error-message';
+                });
+
+                // Product Name validation
+                const nameEn = document.getElementById('nameEn').value.trim();
+                const nameAr = document.getElementById('nameAr').value.trim();
+
+                if (!nameEn) {
+                    showError('nameEn', 'English name is required');
+                    isValid = false;
+                }
+
+                if (!nameAr) {
+                    showError('nameAr', 'Arabic name is required');
+                    isValid = false;
+                }
+
+                // Description validation
+                const descriptionEn = document.getElementById('descriptionEn').value.trim();
+                const descriptionAr = document.getElementById('descriptionAr').value.trim();
+
+                if (!descriptionEn) {
+                    showError('descriptionEn', 'English description is required');
+                    isValid = false;
+                }
+
+                if (!descriptionAr) {
+                    showError('descriptionAr', 'Arabic description is required');
+                    isValid = false;
+                }
+
+                // Category validation
+                if (!document.getElementById('categoryId').value) {
+                    showError('category', 'Please select a category');
+                    isValid = false;
+                }
+
+                // Branch validation
+                if (selectedBranches.length === 0) {
+                    showError('branch', 'Please select at least one branch');
+                    isValid = false;
+                }
+
+                // Pricing validation
+                const price = parseFloat(document.getElementById('price').value);
+                const cost = parseFloat(document.getElementById('costPerItem').value);
+
+                if (!price || price <= 0) {
+                    showError('price', 'Please enter a valid selling price');
+                    isValid = false;
+                }
+
+                if (!cost || cost <= 0) {
+                    showError('cost', 'Please enter a valid cost per item');
+                    isValid = false;
+                }
+
+                if (price && cost && price <= cost) {
+                    showError('price', 'Selling price should be higher than cost');
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            function updateProfitCalculation() {
+                const price = parseFloat(document.getElementById('price').value) || 0;
+                const cost = parseFloat(document.getElementById('costPerItem').value) || 0;
+
+                const profit = price - cost;
+                const margin = price > 0 ? ((profit / price) * 100) : 0;
+                const markup = cost > 0 ? ((profit / cost) * 100) : 0;
+
+                document.getElementById('profitAmount').textContent = `AED ${profit.toFixed(2)}`;
+                document.getElementById('profitMargin').textContent = `${margin.toFixed(1)}%`;
+                document.getElementById('markup').textContent = `${markup.toFixed(1)}%`;
+
+                // Update colors based on margin
+                const profitColor = margin > 30 ? 'text-green-600' : margin > 15 ? 'text-yellow-600' : 'text-red-600';
+                document.getElementById('profitAmount').className = `text-xl font-bold ${profitColor}`;
+                document.getElementById('profitMargin').className = `text-xl font-bold ${profitColor}`;
+            }
+
+            function addTag(tagText) {
+                tagText = tagText.trim().toLowerCase();
+                if (tagText && !tags.includes(tagText) && tags.length < 10) {
+                    tags.push(tagText);
+                    renderTags();
+                    markFieldAsChanged('tagInput');
+                    return true;
+                }
+                return false;
+            }
+
+            function removeTag(tagText) {
+                tags = tags.filter(tag => tag !== tagText);
+                renderTags();
+                markFieldAsChanged('tagInput');
+            }
+
+            function renderTags() {
+                const tagInput = document.getElementById('tagInput');
+                const inputField = document.getElementById('tagInputField');
+
+                // Clear existing tags
+                const existingTags = tagInput.querySelectorAll('.tag-chip');
+                existingTags.forEach(tag => tag.remove());
+
+                // Add tags
+                tags.forEach(tag => {
+                    const tagChip = document.createElement('div');
+                    tagChip.className = 'tag-chip';
+                    tagChip.innerHTML = `
+                    <span>${tag}</span>
+                    <button type="button" onclick="removeTag('${tag}')">×</button>
+                `;
+                    tagInput.insertBefore(tagChip, inputField);
+                });
+            }
+
+            function updateSelectedBranchCount() {
+                document.getElementById('selectedBranchCount').textContent = selectedBranches.length;
+            }
+
+            function toggleBranchSelection(branchId) {
+                if (selectedBranches.includes(branchId)) {
+                    selectedBranches = selectedBranches.filter(id => id !== branchId);
+                } else {
+                    selectedBranches.push(branchId);
+                }
+                renderBranches();
+                updateSelectedBranchCount();
+                clearError('branch');
+                hasUnsavedChanges = true;
+            }
+
+            function selectAllBranches() {
+                selectedBranches = stores.map(store => store._id);
+                renderBranches();
+                updateSelectedBranchCount();
+                clearError('branch');
+                hasUnsavedChanges = true;
+            }
+
+            function clearAllBranches() {
+                selectedBranches = [];
+                renderBranches();
+                updateSelectedBranchCount();
+                hasUnsavedChanges = true;
+            }
+
+            function renderBranches() {
+                const container = document.getElementById('branchesContainer');
+                container.innerHTML = '';
+
+                stores.forEach(store => {
+                    const isSelected = selectedBranches.includes(store._id);
+                    const branchCard = document.createElement('div');
+                    branchCard.className = `branch-card border-2 rounded-lg p-4 cursor-pointer transition-all ${isSelected ? 'selected' : 'border-gray-300 hover:border-gray-400'
+                        }`;
+                    branchCard.onclick = () => toggleBranchSelection(store._id);
+
+                    branchCard.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-${isSelected ? 'check-circle text-brand-teal' : 'circle text-gray-400'} mr-3 text-lg"></i>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900">${store.name}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${store.address}</p>
+                        </div>
+                    </div>
+                `;
+
+                    container.appendChild(branchCard);
+                });
+            }
+
+            function populateDropdowns() {
+                // Populate categories
+                const categorySelect = document.getElementById('categoryId');
+                categorySelect.innerHTML = '<option value="">Select a category</option>';
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category._id;
+                    option.textContent = category.name?.en || 'Unnamed Category';
+                    categorySelect.appendChild(option);
+                });
+
+                // Populate brands
+                const brandSelect = document.getElementById('brandId');
+                brandSelect.innerHTML = '<option value="">Select a brand</option>';
+
+                brands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand._id;
+                    option.textContent = brand.name?.en || 'Unnamed Brand';
+                    brandSelect.appendChild(option);
+                });
+            }
+
+            function updateImageCount() {
+                const totalImages = existingImages.length + newImages.length;
+                document.getElementById('imageCount').textContent = totalImages;
+            }
+
+            function renderExistingImages() {
+                const container = document.getElementById('existingImagesContainer');
+                container.innerHTML = '';
+
+                if (existingImages.length === 0) {
+                    document.getElementById('existingImagesSection').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('existingImagesSection').style.display = 'block';
+
+                existingImages.forEach((imageUrl, index) => {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'image-preview existing-image relative';
+                    previewDiv.dataset.url = imageUrl;
+
+                    const displayUrl = (imageUrl.startsWith('/') || imageUrl.startsWith('http')) ? imageUrl : '/' + imageUrl;
+
+                    previewDiv.innerHTML = `
+                    <img src="${displayUrl}" alt="Product Image" class="w-full h-32 object-cover rounded-lg" onerror="this.src='/static-files/placeholder.png'; this.parentElement.classList.add('image-error');">
+                    <div class="remove-btn transition-all rounded-lg">
+                        <button type="button" class="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm hover:bg-red-600 transition-all shadow-lg"
+                                onclick="removeExistingImage('${imageUrl}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                        Current
+                    </div>
+                    ${index === 0 ? '<div class="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">Primary</div>' : ''}
+                `;
+
+                    container.appendChild(previewDiv);
+                });
+
+                updateImageCount();
+            }
+
+            function removeExistingImage(imageUrl) {
+                if (confirm('Are you sure you want to remove this image?')) {
+                    existingImages = existingImages.filter(url => url !== imageUrl);
+                    imagesToDelete.push(imageUrl);
+                    renderExistingImages();
+                    hasUnsavedChanges = true;
+                }
+            }
+
+            function addNewImagePreview(file, index) {
+                const container = document.getElementById('newImagePreviewContainer');
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'image-preview new-image relative';
+                previewDiv.dataset.index = index;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewDiv.innerHTML = `
+                    <img src="${e.target.result}" alt="New Image" class="w-full h-32 object-cover rounded-lg">
+                    <div class="remove-btn transition-all rounded-lg">
+                        <button type="button" class="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm hover:bg-red-600 transition-all shadow-lg"
+                                onclick="removeNewImagePreview(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        New
+                    </div>
+                    <div class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                        ${Math.round(file.size / 1024)}KB
+                    </div>
+                `;
+                };
+                reader.readAsDataURL(file);
+
+                container.appendChild(previewDiv);
+            }
+
+            function removeNewImagePreview(index) {
+                const preview = document.querySelector(`[data-index="${index}"]`);
+                if (preview) {
+                    preview.remove();
+                    newImages.splice(index, 1);
+                    updateImageCount();
+
+                    // Re-render all previews to fix indices
+                    const container = document.getElementById('newImagePreviewContainer');
+                    container.innerHTML = '';
+                    newImages.forEach((file, i) => addNewImagePreview(file, i));
+                }
+            }
+
+            function openModal(modalId) {
+                document.getElementById(modalId).classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).classList.remove('show');
+                document.body.style.overflow = 'auto';
+
+                // Reset modal forms
+                if (modalId === 'categoryModal') {
+                    document.getElementById('categoryForm').reset();
+                    categoryImageFile = null;
+                    document.getElementById('categoryImageUpload').classList.remove('hidden');
+                    document.getElementById('categoryImagePreview').classList.add('hidden');
+                } else if (modalId === 'brandModal') {
+                    document.getElementById('brandForm').reset();
+                    brandLogoFile = null;
+                    document.getElementById('brandLogoUpload').classList.remove('hidden');
+                    document.getElementById('brandLogoPreview').classList.add('hidden');
+                }
+            }
+
+            function showUploadProgress(show = true) {
+                const progressContainer = document.querySelector('.upload-progress');
+                const progressBar = document.querySelector('.upload-progress-bar');
+
+                if (show) {
+                    progressContainer.classList.remove('hidden');
+                    progressBar.style.width = '0%';
+                } else {
+                    progressContainer.classList.add('hidden');
+                }
+            }
+
+            function updateUploadProgress(percent) {
+                const progressBar = document.querySelector('.upload-progress-bar');
+                progressBar.style.width = `${percent}%`;
+            }
+
+            async function handleImageUpload(files) {
+                const validFiles = Array.from(files).filter(file => {
+                    if (!file.type.startsWith('image/')) {
+                        showNotification(`${file.name} is not an image file`, 'error');
+                        return false;
+                    }
+                    if (file.size > IMAGE_SIZE_LIMIT * 1024 * 1024) {
+                        showNotification(`${file.name} is too large (max ${IMAGE_SIZE_LIMIT}MB)`, 'error');
+                        return false;
+                    }
+                    return true;
+                });
+
+                if (validFiles.length === 0) return;
+
+                const totalImages = existingImages.length + newImages.length + validFiles.length;
+                if (totalImages > IMAGE_LIMIT) {
+                    showNotification(`Maximum ${IMAGE_LIMIT} images allowed total`, 'error');
+                    return;
+                }
+
+                try {
+                    showUploadProgress(true);
+
+                    // Simulate upload progress
+                    for (let i = 0; i <= 100; i += 10) {
+                        updateUploadProgress(i);
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+
+                    // Add to new images
+                    validFiles.forEach((file) => {
+                        newImages.push(file);
+                        addNewImagePreview(file, newImages.length - 1);
+                    });
+
+                    updateImageCount();
+                    showUploadProgress(false);
+                    showNotification(`${validFiles.length} image(s) added successfully`);
+                    hasUnsavedChanges = true;
+
+                } catch (error) {
+                    showUploadProgress(false);
+                    showNotification('Failed to upload images: ' + error.message, 'error');
+                }
+            }
+
+            function saveDraft() {
+                try {
+                    const formData = new FormData(document.getElementById('productForm'));
+                    const draftData = {
+                        productId: productData._id,
+                        name: {
+                            en: formData.get('name.en') || '',
+                            ar: formData.get('name.ar') || ''
+                        },
+                        description: {
+                            en: formData.get('description.en') || '',
+                            ar: formData.get('description.ar') || ''
+                        },
+                        categoryId: formData.get('categoryId') || '',
+                        brandId: formData.get('brandId') || '',
+                        pricing: {
+                            price: formData.get('pricing.price') || '',
+                            costPerItem: formData.get('pricing.costPerItem') || ''
+                        },
+                        selectedBranches: selectedBranches,
+                        tags: tags,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    localStorage.setItem(`productDraft_${productData._id}`, JSON.stringify(draftData));
+                    showNotification('Draft saved successfully');
+                } catch (error) {
+                    showNotification('Failed to save draft', 'error');
+                }
+            }
+
+            function checkForUnsavedChanges() {
+                if (hasUnsavedChanges) {
+                    return confirm('You have unsaved changes. Are you sure you want to leave?');
+                }
+                return true;
+            }
+
+            // Event Listeners
+            document.addEventListener('DOMContentLoaded', function () {
+                // Initialize data
+                populateDropdowns();
+                populateProductData();
+
+                // Update limit text
+                document.getElementById('imageLimitText').innerText = `Max ${IMAGE_LIMIT} images, ${IMAGE_SIZE_LIMIT}MB each`;
+
+                // Auto-generate slug
+                document.getElementById('nameEn').addEventListener('input', function () {
+                    const newSlug = generateSlug(this.value);
+                    if (newSlug !== productData.meta?.slug) {
+                        document.getElementById('slug').value = newSlug;
+                        markFieldAsChanged('slug');
+                    }
+                    clearError('nameEn');
+                    markFieldAsChanged('nameEn');
+                });
+
+                // Input validation and change tracking
+                ['nameAr', 'descriptionEn', 'descriptionAr'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', () => {
+                        clearError(id);
+                        markFieldAsChanged(id);
+                    });
+                });
+
+                document.getElementById('categoryId').addEventListener('change', () => {
+                    clearError('category');
+                    markFieldAsChanged('categoryId');
+                });
+
+                document.getElementById('brandId').addEventListener('change', () => {
+                    markFieldAsChanged('brandId');
+                });
+
+                // Pricing calculations
+                ['price', 'costPerItem'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', () => {
+                        updateProfitCalculation();
+                        clearError(id === 'price' ? 'price' : 'cost');
+                        markFieldAsChanged(id);
+                    });
+                });
+
+                // Slug editing
+                let slugEditable = false;
+                document.getElementById('editSlugBtn').addEventListener('click', function () {
+                    const slugInput = document.getElementById('slug');
+                    if (!slugEditable) {
+                        slugInput.readOnly = false;
+                        slugInput.classList.remove('bg-gray-50', 'text-gray-600');
+                        slugInput.focus();
+                        this.innerHTML = '<i class="fas fa-check text-green-600"></i>';
+                        slugEditable = true;
+                    } else {
+                        const newSlug = slugInput.value.trim();
+                        if (newSlug && newSlug !== productData.meta?.slug) {
+                            markFieldAsChanged('slug');
+                        }
+
+                        slugInput.readOnly = true;
+                        slugInput.classList.add('bg-gray-50', 'text-gray-600');
+                        this.innerHTML = '<i class="fas fa-edit"></i>';
+                        slugEditable = false;
+                    }
+                });
+
+                // Tag input
+                const tagInputField = document.getElementById('tagInputField');
+                tagInputField.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const tagText = this.value.trim();
+                        if (tagText) {
+                            if (addTag(tagText)) {
+                                this.value = '';
+                            } else {
+                                showNotification('Tag already exists or limit reached (max 10)', 'warning');
+                            }
+                        }
+                    }
+                });
+
+                // Suggested tags
+                document.querySelectorAll('.suggested-tag').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        if (addTag(this.dataset.tag)) {
+                            this.style.opacity = '0.5';
+                            this.disabled = true;
+                        }
+                    });
+                });
+
+                // Tag input click to focus
+                document.getElementById('tagInput').addEventListener('click', function () {
+                    tagInputField.focus();
+                });
+
+                // Branch selection
+                document.getElementById('selectAllBranches').addEventListener('click', selectAllBranches);
+                document.getElementById('clearAllBranches').addEventListener('click', clearAllBranches);
+
+                // Image upload
+                const imageInput = document.getElementById('imageInput');
+                const uploadArea = document.getElementById('imageUploadArea');
+
+                imageInput.addEventListener('change', function () {
+                    if (this.files.length > 0) {
+                        handleImageUpload(this.files);
+                        this.value = '';
+                    }
+                });
+
+                // Drag and drop for main images
+                ['dragover', 'dragenter'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, function (e) {
+                        e.preventDefault();
+                        this.classList.add('drag-over');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, function (e) {
+                        e.preventDefault();
+                        this.classList.remove('drag-over');
+                    });
+                });
+
+                uploadArea.addEventListener('drop', function (e) {
+                    if (e.dataTransfer.files.length > 0) {
+                        handleImageUpload(e.dataTransfer.files);
+                    }
+                });
+
+                // Category image upload
+                document.getElementById('categoryImageInput').addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (!file) return;
+
+                    if (!file.type.startsWith('image/')) {
+                        showNotification('Please select an image file', 'error');
+                        return;
+                    }
+
+                    categoryImageFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.getElementById('categoryImageImg').src = e.target.result;
+                        document.getElementById('categoryImageUpload').classList.add('hidden');
+                        document.getElementById('categoryImagePreview').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                document.getElementById('removeCategoryImage').addEventListener('click', function () {
+                    categoryImageFile = null;
+                    document.getElementById('categoryImageInput').value = '';
+                    document.getElementById('categoryImageUpload').classList.remove('hidden');
+                    document.getElementById('categoryImagePreview').classList.add('hidden');
+                });
+
+                // Brand logo upload
+                document.getElementById('brandLogoInput').addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (!file) return;
+
+                    if (!file.type.startsWith('image/')) {
+                        showNotification('Please select an image file', 'error');
+                        return;
+                    }
+
+                    brandLogoFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.getElementById('brandLogoImg').src = e.target.result;
+                        document.getElementById('brandLogoUpload').classList.add('hidden');
+                        document.getElementById('brandLogoPreview').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                document.getElementById('removeBrandLogo').addEventListener('click', function () {
+                    brandLogoFile = null;
+                    document.getElementById('brandLogoInput').value = '';
+                    document.getElementById('brandLogoUpload').classList.remove('hidden');
+                    document.getElementById('brandLogoPreview').classList.add('hidden');
+                });
+
+                // Modal triggers
+                document.getElementById('addCategoryBtn').addEventListener('click', () => openModal('categoryModal'));
+                document.getElementById('addBrandBtn').addEventListener('click', () => openModal('brandModal'));
+
+                // Modal close on backdrop click
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', function (e) {
+                        if (e.target === this) {
+                            closeModal(this.id);
+                        }
+                    });
+                });
+
+                // Form submission
+                document.getElementById('productForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    if (!validateForm()) {
+                        showNotification('Please fix the errors in the form', 'error');
+                        return;
+                    }
+
+                    try {
+                        const submitBtn = document.getElementById('submitBtn');
+                        const originalContent = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<div class="loading-spinner"></div> Updating Product...';
+                        submitBtn.disabled = true;
+
+                        // Upload new images first if any
+                        let newImageUrls = [];
+                        if (newImages.length > 0) {
+                            showNotification('Uploading new images...', 'success');
+                            const uploadResponse = await ProductAPI.uploadImages(newImages);
+                            newImageUrls = uploadResponse.data?.urls || [];
+                        }
+
+                        // Delete removed images
+                        for (const imageUrl of imagesToDelete) {
+                            try {
+                                await ProductAPI.deleteProductImage(productData._id, imageUrl);
+                            } catch (error) {
+                                console.warn('Failed to delete image:', imageUrl, error);
+                            }
+                        }
+
+                        const formData = new FormData(this);
+                        const updateData = {
+                            name: {
+                                en: formData.get('name.en'),
+                                ar: formData.get('name.ar')
+                            },
+                            description: {
+                                en: formData.get('description.en'),
+                                ar: formData.get('description.ar')
+                            },
+                            categoryId: formData.get('categoryId'),
+                            brandId: formData.get('brandId') || null,
+                            branchIds: selectedBranches,
+                            pricing: {
+                                price: parseFloat(formData.get('pricing.price')),
+                                costPerItem: parseFloat(formData.get('pricing.costPerItem')),
+                                currency: 'AED'
+                            },
+                            images: [...existingImages, ...newImageUrls],
+                            meta: {
+                                slug: formData.get('meta.slug'),
+                                keywords: tags
+                            }
+                        };
+
+                        const response = await ProductAPI.updateProduct(productData._id, updateData);
+
+                        // Clear draft and reset change tracking
+                        localStorage.removeItem(`productDraft_${productData._id}`);
+                        hasUnsavedChanges = false;
+
+                        showNotification('Product updated successfully!');
+
+                        // Redirect after success
+                        setTimeout(() => {
+                            window.location.href = '/product';
+                        }, 2000);
+
+                    } catch (error) {
+                        console.error('Update Product Error:', error);
+                        showNotification('Failed to update product: ' + error.message, 'error');
+
+                        const submitBtn = document.getElementById('submitBtn');
+                        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Product';
+                        submitBtn.disabled = false;
+                    }
+                });
+
+                // Category form submission
+                document.getElementById('categoryForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    try {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        const btnText = submitBtn.querySelector('.btn-text');
+                        const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                        btnText.classList.add('hidden');
+                        btnLoading.classList.remove('hidden');
+                        submitBtn.disabled = true;
+
+                        const categoryData = {
+                            name: {
+                                en: document.getElementById('categoryNameEn').value,
+                                ar: document.getElementById('categoryNameAr').value
+                            },
+                            imageFile: categoryImageFile
+                        };
+
+                        const response = await ProductAPI.createCategory(categoryData);
+
+                        const newCategory = response.data?.category || {
+                            _id: 'temp_' + Date.now(),
+                            name: categoryData.name
+                        };
+
+                        categories.push(newCategory);
+                        populateDropdowns();
+
+                        document.getElementById('categoryId').value = newCategory._id;
+                        markFieldAsChanged('categoryId');
+
+                        closeModal('categoryModal');
+                        showNotification('Category created successfully!');
+
+                    } catch (error) {
+                        showNotification('Failed to create category: ' + error.message, 'error');
+                    } finally {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        const btnText = submitBtn.querySelector('.btn-text');
+                        const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                        btnText.classList.remove('hidden');
+                        btnLoading.classList.add('hidden');
+                        submitBtn.disabled = false;
+                    }
+                });
+
+                // Brand form submission
+                document.getElementById('brandForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    try {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        const btnText = submitBtn.querySelector('.btn-text');
+                        const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                        btnText.classList.add('hidden');
+                        btnLoading.classList.remove('hidden');
+                        submitBtn.disabled = true;
+
+                        const brandData = {
+                            name: {
+                                en: document.getElementById('brandNameEn').value,
+                                ar: document.getElementById('brandNameAr').value
+                            },
+                            tagline: {
+                                en: document.getElementById('brandTaglineEn').value,
+                                ar: document.getElementById('brandTaglineAr').value
+                            },
+                            logoFile: brandLogoFile
+                        };
+
+                        const response = await ProductAPI.createBrand(brandData);
+
+                        const newBrand = response.data?.brand || {
+                            _id: 'temp_' + Date.now(),
+                            name: brandData.name
+                        };
+
+                        brands.push(newBrand);
+                        populateDropdowns();
+
+                        document.getElementById('brandId').value = newBrand._id;
+                        markFieldAsChanged('brandId');
+
+                        closeModal('brandModal');
+                        showNotification('Brand created successfully!');
+
+                    } catch (error) {
+                        showNotification('Failed to create brand: ' + error.message, 'error');
+                    } finally {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        const btnText = submitBtn.querySelector('.btn-text');
+                        const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                        btnText.classList.remove('hidden');
+                        btnLoading.classList.add('hidden');
+                        submitBtn.disabled = false;
+                    }
+                });
+
+                // Save draft
+                document.getElementById('saveDraftBtn').addEventListener('click', saveDraft);
+
+                // Auto-save draft
+                let autoSaveTimeout;
+                document.querySelectorAll('input, textarea, select').forEach(input => {
+                    input.addEventListener('input', () => {
+                        clearTimeout(autoSaveTimeout);
+                        autoSaveTimeout = setTimeout(saveDraft, 5000);
+                    });
+                });
+
+                // Other buttons
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    if (checkForUnsavedChanges()) {
+                        window.location.href = `/product/view/${productData._id}` || '/products';
+                    }
+                });
+
+                document.getElementById('viewProductBtn').addEventListener('click', () => {
+                    window.open(`/product/view/${productData._id}`, '_blank');
+                });
+
+                document.getElementById('cancelBtn').addEventListener('click', () => {
+                    if (checkForUnsavedChanges()) {
+                        localStorage.removeItem(`productDraft_${productData._id}`);
+                        window.location.href = `/product/view/${productData._id}` || '/products';
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', function (e) {
+                    if (e.ctrlKey || e.metaKey) {
+                        if (e.key === 's') {
+                            e.preventDefault();
+                            saveDraft();
+                        }
+                    }
+
+                    if (e.key === 'Escape') {
+                        const openModal = document.querySelector('.modal.show');
+                        if (openModal) {
+                            closeModal(openModal.id);
+                        }
+                    }
+                });
+
+                // Warn before leaving page with unsaved changes
+                window.addEventListener('beforeunload', function (e) {
+                    if (hasUnsavedChanges) {
+                        e.preventDefault();
+                        e.returnValue = '';
+                    }
+                });
+            });
+
+            document.getElementById('backBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
+                    window.location.href = '/product';
+                }
+            });
+
+            // Global functions for inline event handlers
+            window.removeTag = removeTag;
+            window.removeExistingImage = removeExistingImage;
+            window.removeNewImagePreview = removeNewImagePreview;
+            window.closeModal = closeModal;
+            window.hideNotification = hideNotification;
+        </script>
+        <%- include('../../partials/Footer') %>

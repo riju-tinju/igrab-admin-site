@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>iGrab Admin Portal - Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1E7065 0%, #2F8A7B 50%, #F59E0B 100%);
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Mobile-first responsive design */
+    .admin-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-container {
+      position: relative;
+      min-height: 500px;
+    }
+
+    .login-card,
+    .otp-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 2rem 1.5rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .login-card.hidden {
+      opacity: 0;
+      transform: translateX(-30px);
+      pointer-events: none;
+    }
+
+    .otp-card {
+      opacity: 0;
+      transform: translateX(30px);
+      pointer-events: none;
+    }
+
+    .otp-card.show {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    /* Input styling */
+    .input-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: #1E7065;
+      box-shadow: 0 0 0 3px rgba(30, 112, 101, 0.1);
+      background: white;
+    }
+
+    .input-field.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .input-label {
+      position: absolute;
+      left: 1rem;
+      top: 1rem;
+      font-size: 1rem;
+      color: #6b7280;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      background: transparent;
+    }
+
+    .input-field:focus+.input-label,
+    .input-field:not(:placeholder-shown)+.input-label {
+      transform: translateY(-2rem) scale(0.8);
+      color: #1E7065;
+      font-weight: 500;
+      background: white;
+      padding: 0 0.5rem;
+      border-radius: 4px;
+    }
+
+    /* Button styling */
+    .btn-primary {
+      background: linear-gradient(135deg, #1E7065, #2F8A7B);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(30, 112, 101, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(30, 112, 101, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* OTP input styling */
+    .otp-container {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .otp-input {
+      width: 100%;
+      height: 3.5rem;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .otp-input:focus {
+      border-color: #1E7065;
+      box-shadow: 0 0 0 3px rgba(30, 112, 101, 0.1);
+      background: white;
+    }
+
+    .otp-input.error {
+      border-color: #ef4444;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px);
+      }
+
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    /* Timer progress bar */
+    .timer-container {
+      margin-top: 1.5rem;
+    }
+
+    .timer-progress {
+      height: 4px;
+      background: #e5e7eb;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .timer-bar {
+      height: 100%;
+      background: linear-gradient(to right, #1E7065, #F59E0B);
+      transition: width 1s linear;
+      border-radius: 2px;
+    }
+
+    /* Logo and branding */
+    .brand-logo {
+      width: 4rem;
+      height: 4rem;
+      background: linear-gradient(135deg, #1E7065, #F59E0B);
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      color: white;
+      font-size: 1.5rem;
+    }
+
+    /* Error message styling */
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #dc2626;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Mobile-specific optimizations */
+    /* @media (max-width: 480px) {
+      .admin-container {
+        padding: 0.5rem;
+        min-height: 100vh;
+      }
+
+      .auth-card {
+        border-radius: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+      }
+
+      .card-container {
+        min-height: auto;
+      }
+
+      .login-card, .otp-card {
+        padding: 1.5rem 1rem;
+      }
+
+      .brand-logo {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.25rem;
+      }
+
+      .otp-input {
+        height: 3rem;
+        font-size: 1.125rem;
+      }
+
+      .otp-container {
+        gap: 0.375rem;
+      }
+    } */
+
+    /* Landscape mobile optimization */
+    /* @media (max-height: 600px) and (orientation: landscape) {
+      .admin-container {
+        padding: 0.5rem;
+      }
+
+      .brand-logo {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .input-group {
+        margin-bottom: 1rem;
+      }
+    } */
+
+    /* Tablet optimizations */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .admin-container {
+        padding: 2rem;
+      }
+
+      .auth-card {
+        border-radius: 20px;
+      }
+    }
+
+    /* Desktop optimizations */
+    @media (min-width: 769px) {
+      .admin-container {
+        padding: 2rem;
+        max-width: 450px;
+      }
+    }
+
+    /* Focus visible for accessibility */
+    .btn-primary:focus-visible,
+    .input-field:focus-visible,
+    .otp-input:focus-visible {
+      outline: 2px solid #1E7065;
+      outline-offset: 2px;
+    }
+
+    /* Prevent zoom on iOS */
+    @supports (-webkit-touch-callout: none) {
+
+      .input-field,
+      .otp-input {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="admin-container">
+    <div x-data="{
+      view: 'login',
+      error: '',
+      name: '',
+      countryCode: '+971',
+      phone: '',
+      otpValues: ['','','','','',''],
+      isSubmitting: false,
+      timer: 300,
+      timerRunning: false,
+      timerWidth: '100%',
+      otpError: false,
+      otpErrorMessage: '',
+      attemptsRemaining: 3,
+      maskedPhone: '',
+
+      async submitForm() {
+        if (!this.validateForm()) return;
+
+        this.isSubmitting = true;
+        this.error = '';
+
+        try {
+          const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: this.name, countryCode: this.countryCode, phone: this.phone })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit');
+          }
+
+          this.maskedPhone = this.maskPhone(this.phone);
+          this.showOtpCard();
+        } catch (err) {
+          this.error = err.message;
+        } finally {
+          this.isSubmitting = false;
+        }
+      },
+
+      showOtpCard() {
+        const loginCard = document.getElementById('login-card');
+        const otpCard = document.getElementById('otp-card');
+        
+        loginCard.classList.add('hidden');
+        
+        setTimeout(() => {
+          otpCard.classList.add('show');
+          document.getElementById('otp-0').focus();
+          this.startTimer();
+        }, 200);
+      },
+
+      async submitOtp() {
+        const otp = this.otpValues.join('');
+        if (otp.length !== 6) {
+          this.showOtpError('Please enter all 6 digits');
+          return;
+        }
+
+        this.otpError = false;
+        this.isSubmitting = true;
+
+        try {
+          const response = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ countryCode: this.countryCode, phone: this.phone, otp })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            if (data.error) {
+              this.otpErrorMessage = data.error;
+              
+              if (data.attemptsRemaining !== undefined) {
+                this.attemptsRemaining = data.attemptsRemaining;
+                this.otpErrorMessage += ` (${data.attemptsRemaining} attempts remaining)`;
+              }
+            } else {
+              this.otpErrorMessage = 'Verification failed. Please try again.';
+            }
+            
+            throw new Error(this.otpErrorMessage);
+          }
+
+          // Success - redirect to admin dashboard
+          setTimeout(() => {
+            window.location.href = '/'; 
+          }, 500);
+        } catch (err) {
+          this.showOtpError(err.message);
+        } finally {
+          this.isSubmitting = false;
+        }
+      },
+
+      showOtpError(message) {
+        this.otpError = true;
+        this.otpErrorMessage = message;
+        
+        // Add error animation to OTP inputs
+        document.querySelectorAll('.otp-input').forEach(input => {
+          input.classList.add('error');
+          setTimeout(() => input.classList.remove('error'), 400);
+        });
+      },
+
+      startTimer() {
+        if (this.timerRunning) return;
+        this.timerRunning = true;
+        this.timer = 300; // 5 minutes
+        this.timerWidth = '100%';
+
+        const timerInterval = setInterval(() => {
+          if (this.timer > 0) {
+            this.timer--;
+            this.timerWidth = (this.timer / 300 * 100) + '%';
+          } else {
+            clearInterval(timerInterval);
+            this.timerRunning = false;
+          }
+        }, 1000);
+      },
+
+      maskPhone(phone) {
+        if (!phone) return '';
+        if (phone.length < 4) return phone;
+        return phone.slice(0, 2) + '****' + phone.slice(-2);
+      },
+
+      handleOtpInput(e, index) {
+        const value = e.target.value.replace(/[^0-9]/g, '');
+        
+        if (value.length > 1) {
+          this.otpValues[index] = value.charAt(0);
+          e.target.value = value.charAt(0);
+        } else {
+          this.otpValues[index] = value;
+        }
+        
+        if (value.length === 1 && index < 5) {
+          this.focusNextInput(index + 1);
+        }
+        
+        this.otpError = false;
+      },
+
+      handleOtpKeydown(e, index) {
+        if (e.key === 'Backspace') {
+          if (this.otpValues[index] === '' && index > 0) {
+            this.focusNextInput(index - 1);
+          }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+          this.focusNextInput(index - 1);
+        } else if (e.key === 'ArrowRight' && index < 5) {
+          this.focusNextInput(index + 1);
+        }
+      },
+
+      focusNextInput(index) {
+        const nextInput = document.getElementById('otp-' + index);
+        if (nextInput) {
+          nextInput.focus();
+        }
+      },
+
+      validateForm() {
+        if (!this.name.trim()) {
+          this.error = 'Please enter your name';
+          return false;
+        }
+
+        if (!this.phone.trim()) {
+          this.error = 'Please enter your phone number';
+          return false;
+        }
+
+        const phoneRegex = /^[0-9]{7,15}$/;
+        if (!phoneRegex.test(this.phone)) {
+          this.error = 'Please enter a valid phone number';
+          return false;
+        }
+
+        this.error = '';
+        return true;
+      },
+
+      formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      }
+    }" class="auth-card">
+
+      <div class="card-container">
+        <!-- Login Card -->
+        <div id="login-card" class="login-card">
+          <div class="text-center">
+            <div class="brand-logo">
+              <i class="fas fa-building"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">iGrab Admin Portal</h1>
+            <p class="text-gray-600 text-sm mb-6">Secure access to your admin dashboard</p>
+          </div>
+
+          <!-- Error Message -->
+          <div x-show="error" x-transition class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span x-text="error"></span>
+          </div>
+
+          <!-- Login Form -->
+          <form @submit.prevent="submitForm()">
+            <div class="input-group">
+              <input type="text" id="name" class="input-field" placeholder=" " x-model="name"
+                :class="{'error': error && !name}" autocomplete="name" required>
+              <label for="name" class="input-label">Full Name</label>
+            </div>
+
+            <div class="flex gap-2">
+              <div class="input-group w-32">
+                <select id="countryCode" class="input-field appearance-none" x-model="countryCode" required>
+                  <option value="+971">+971 (UAE)</option>
+                  <option value="+966">+966 (KSA)</option>
+                  <option value="+968">+968 (OMN)</option>
+                  <option value="+965">+965 (KWT)</option>
+                  <option value="+973">+973 (BHR)</option>
+                  <option value="+974">+974 (QAT)</option>
+                  <option value="+91">+91 (IND)</option>
+                </select>
+                <label for="countryCode" class="input-label">Code</label>
+                <div class="absolute right-3 top-4 pointer-events-none text-gray-400">
+                  <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+              </div>
+              <div class="input-group flex-1">
+                <input type="tel" id="phone" class="input-field" placeholder=" " x-model="phone"
+                  :class="{'error': error && !phone}" autocomplete="tel" required>
+                <label for="phone" class="input-label">Phone Number</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" :disabled="isSubmitting">
+              <span x-show="!isSubmitting">Access Portal</span>
+              <span x-show="isSubmitting" class="flex items-center gap-2">
+                <div class="spinner"></div>
+                Verifying...
+              </span>
+            </button>
+          </form>
+
+          <div class="text-center mt-6">
+            <p class="text-gray-500 text-xs">
+              <i class="fas fa-shield-alt mr-1"></i>
+              Secure admin authentication
+            </p>
+          </div>
+        </div>
+
+        <!-- OTP Verification Card -->
+        <div id="otp-card" class="otp-card">
+          <div class="text-center">
+            <div class="brand-logo">
+              <i class="fas fa-shield-check"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Verify Access</h2>
+            <p class="text-gray-600 text-sm mb-4">
+              We've sent a 6-digit code to<br>
+              <span class="font-semibold text-teal-700" x-text="countryCode + ' ' + maskedPhone"></span>
+            </p>
+          </div>
+
+          <!-- OTP Error Message -->
+          <div x-show="otpError" x-transition class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span x-text="otpErrorMessage"></span>
+          </div>
+
+          <!-- OTP Input -->
+          <div class="otp-container">
+            <template x-for="(digit, index) in 6" :key="index">
+              <input :id="'otp-' + index" type="text" maxlength="1" class="otp-input" x-model="otpValues[index]"
+                @input="handleOtpInput($event, index)" @keydown="handleOtpKeydown($event, index)"
+                autocomplete="one-time-code" inputmode="numeric">
+            </template>
+          </div>
+
+          <button @click="submitOtp" class="btn-primary" :disabled="isSubmitting">
+            <span x-show="!isSubmitting">Verify & Continue</span>
+            <span x-show="isSubmitting" class="flex items-center gap-2">
+              <div class="spinner"></div>
+              Verifying...
+            </span>
+          </button>
+
+          <!-- Timer -->
+          <div class="timer-container">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Code expires in:</span>
+              <span x-text="formatTime(timer)" class="font-mono font-semibold"></span>
+            </div>
+            <div class="timer-progress">
+              <div class="timer-bar" :style="`width: ${timerWidth}`"></div>
+            </div>
+          </div>
+
+          <div class="text-center mt-6">
+            <p class="text-gray-500 text-xs">
+              <i class="fas fa-clock mr-1"></i>
+              Didn't receive the code? Check your phone
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

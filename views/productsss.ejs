@@ -1,0 +1,937 @@
+<%- include('./partials/Header') %> 
+<style>
+        .brand-teal { background-color: #1E7065; }
+        .brand-teal-light { background-color: #2F8A7B; }
+        .brand-orange { background-color: #F59E0B; }
+        .text-brand-teal { color: #1E7065; }
+        .border-brand-teal { border-color: #1E7065; }
+        .hover-brand-teal:hover { background-color: #1E7065; }
+        
+        .product-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .product-card:hover {
+            border-left-color: #1E7065;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .status-published {
+            background-color: #10B981;
+            color: white;
+        }
+        
+        .status-draft {
+            background-color: #F59E0B;
+            color: white;
+        }
+        
+        .status-out-of-stock {
+            background-color: #EF4444;
+            color: white;
+        }
+        
+        .filter-active {
+            background-color: #1E7065;
+            color: white;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1E7065;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+
+        .empty-state {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+<!-- Main Content -->
+<main class="main-content p-4 sm:p-6">
+  <!-- Header Section -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Products Management</h1>
+                    <p class="text-gray-600">Manage your cafe products, inventory, and pricing</p>
+                </div>
+                <button id="addProductBtn" class="brand-teal hover:brand-teal-light text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 mt-4 sm:mt-0">
+                    <i class="fas fa-plus mr-2"></i>Add New Product
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="statsCards">
+                <!-- Stats will be populated by EJS/JavaScript -->
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Search -->
+                <div class="flex-1 relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search products by name or brand..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <i class="fas fa-times cursor-pointer text-gray-400 hover:text-gray-600 hidden" id="clearSearch"></i>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2" id="filterButtons">
+                    <button class="filter-btn filter-active px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-filter="all">
+                        <i class="fas fa-list mr-1"></i>All Products
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-filter="out-of-stock">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>Out of Stock
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-filter="top-selling">
+                        <i class="fas fa-fire mr-1"></i>Top Selling
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-filter="low-stock">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Low Stock
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-filter="recently-added">
+                        <i class="fas fa-clock mr-1"></i>Recently Added
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden bg-white rounded-lg shadow-sm border p-8">
+            <div class="flex flex-col items-center justify-center">
+                <div class="loading-spinner mb-4"></div>
+                <p class="text-gray-600">Loading products...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden error-state rounded-lg border p-8">
+            <div class="flex flex-col items-center justify-center text-center">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                <h3 class="text-lg font-semibold text-red-800 mb-2">Something went wrong</h3>
+                <p class="text-red-600 mb-4" id="errorMessage">Failed to load products. Please try again.</p>
+                <button id="retryBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Retry
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden empty-state rounded-lg border p-8">
+            <div class="flex flex-col items-center justify-center text-center">
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">No products found</h3>
+                <p class="text-gray-500 mb-4">Try adjusting your search or filter criteria.</p>
+                <button id="clearFiltersBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-filter mr-2"></i>Clear Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Products Grid/Table -->
+        <div id="productsContainer" class="bg-white rounded-lg shadow-sm border">
+            <!-- Desktop Table View -->
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="text-left p-4 font-semibold text-gray-900">Product</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Category</th>
+                            <th class="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" id="sortByPrice">
+                                Price <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Stock</th>
+                            <th class="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" id="sortByOrders">
+                                Total Orders <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Brand</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Status</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <!-- Products will be populated by EJS/JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="lg:hidden" id="productsMobileView">
+                <!-- Products will be populated by EJS/JavaScript -->
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between" id="paginationContainer">
+            <div class="text-sm text-gray-700 mb-4 sm:mb-0" id="paginationInfo">
+                <!-- Pagination info will be populated -->
+            </div>
+            <div class="flex items-center space-x-2" id="paginationButtons">
+                <!-- Pagination buttons will be populated -->
+            </div>
+        </div>
+</main>
+<script>
+        // API Configuration and State Management
+        const API_BASE_URL = '/api'; // Change this to your actual API base URL
+        let currentPage = 1;
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let currentSort = { field: null, direction: 'asc' };
+        let searchTimeout = null;
+
+        // API Functions with Error Handling
+        class ProductAPI {
+            static async fetchProducts(params = {}) {
+                try {
+                    const queryParams = new URLSearchParams({
+                        page: params.page || currentPage,
+                        limit: params.limit || 10,
+                        search: params.search || currentSearch,
+                        filter: params.filter || currentFilter,
+                        sortField: params.sortField || currentSort.field,
+                        sortDirection: params.sortDirection || currentSort.direction
+                    });
+
+                    // Remove empty parameters
+                    for (let [key, value] of queryParams.entries()) {
+                        if (!value || value === 'null') {
+                            queryParams.delete(key);
+                        }
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/products?${queryParams}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'API returned unsuccessful response');
+                    }
+
+                    return data;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            }
+
+            static async deleteProduct(productId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Delete Error:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // UI State Management
+        class UIManager {
+            static showLoading() {
+                document.getElementById('loadingState').classList.remove('hidden');
+                document.getElementById('productsContainer').classList.add('hidden');
+                document.getElementById('errorState').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+            }
+
+            static showError(message = 'Something went wrong') {
+                document.getElementById('errorMessage').textContent = message;
+                document.getElementById('errorState').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('productsContainer').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+            }
+
+            static showEmpty() {
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('productsContainer').classList.add('hidden');
+                document.getElementById('errorState').classList.add('hidden');
+            }
+
+            static showProducts() {
+                document.getElementById('productsContainer').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+            }
+
+            static updateFilterButtons(activeFilter) {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('filter-active');
+                    if (btn.dataset.filter === activeFilter) {
+                        btn.classList.add('filter-active');
+                    }
+                });
+            }
+        }
+
+        // EJS-like Template Rendering (Server-side simulation)
+        class TemplateRenderer {
+            static renderStatsCards(stats) {
+                const statsContainer = document.getElementById('statsCards');
+                statsContainer.innerHTML = `
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="brand-teal text-white p-3 rounded-lg">
+                                <i class="fas fa-coffee"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Total Products</p>
+                                <p class="text-xl font-bold">${stats.totalProducts || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="bg-green-500 text-white p-3 rounded-lg">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Published</p>
+                                <p class="text-xl font-bold">${stats.publishedProducts || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="brand-orange text-white p-3 rounded-lg">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Low Stock</p>
+                                <p class="text-xl font-bold">${stats.lowStockProducts || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="bg-red-500 text-white p-3 rounded-lg">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Out of Stock</p>
+                                <p class="text-xl font-bold">${stats.outOfStockProducts || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            static renderDesktopTable(products) {
+                const tbody = document.getElementById('productsTableBody');
+                tbody.innerHTML = '';
+
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-gray-50 transition-colors fade-in';
+                    
+                    row.innerHTML = `
+                        <td class="p-4">
+                            <div class="flex items-center">
+                                <div class="text-2xl mr-3">${product.image || '☕'}</div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">${product.name}</div>
+                                    <div class="text-sm text-gray-500">ID: ${product._id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                ${product.category}
+                            </span>
+                        </td>
+                        <td class="p-4 font-semibold">AED ${product.price}</td>
+                        <td class="p-4">
+                            <span class="font-medium ${product.stock < 50 ? 'text-red-600' : product.stock === 0 ? 'text-red-700' : 'text-green-600'}">
+                                ${product.stock}
+                            </span>
+                        </td>
+                        <td class="p-4 font-medium">${(product.totalOrders || 0).toLocaleString()}</td>
+                        <td class="p-4 text-sm text-gray-600">${product.brand}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full status-${product.status}">
+                                ${product.status.replace('-', ' ').toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800 p-1" title="Edit" onclick="editProduct('${product._id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800 p-1" title="Delete" onclick="confirmDelete('${product._id}', '${product.name}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+
+            static renderMobileCards(products) {
+                const container = document.getElementById('productsMobileView');
+                container.innerHTML = '';
+
+                products.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card p-4 border-b fade-in';
+                    
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="text-2xl mr-3">${product.image || '☕'}</div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">${product.name}</h3>
+                                    <p class="text-sm text-gray-500">${product.brand}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full status-${product.status}">
+                                ${product.status.replace('-', ' ').toUpperCase()}
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Category</p>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                    ${product.category}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Price</p>
+                                <p class="font-semibold">AED ${product.price}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Stock</p>
+                                <p class="font-medium ${product.stock < 50 ? 'text-red-600' : product.stock === 0 ? 'text-red-700' : 'text-green-600'}">
+                                    ${product.stock}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Total Orders</p>
+                                <p class="font-medium">${(product.totalOrders || 0).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800 px-3 py-1 text-sm font-medium" onclick="editProduct('${product._id}')">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button class="text-red-600 hover:text-red-800 px-3 py-1 text-sm font-medium" onclick="confirmDelete('${product._id}', '${product.name}')">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
+
+            static renderPagination(pagination) {
+                const infoContainer = document.getElementById('paginationInfo');
+                const buttonsContainer = document.getElementById('paginationButtons');
+
+                // Update pagination info
+                const start = (pagination.currentPage - 1) * 10 + 1;
+                const end = Math.min(pagination.currentPage * 10, pagination.totalProducts);
+                infoContainer.innerHTML = `
+                    Showing <span class="font-medium">${start}</span> to <span class="font-medium">${end}</span> 
+                    of <span class="font-medium">${pagination.totalProducts}</span> results
+                `;
+
+                // Update pagination buttons
+                buttonsContainer.innerHTML = '';
+
+                // Previous button
+                const prevBtn = document.createElement('button');
+                prevBtn.className = `px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ${!pagination.hasPrev ? 'disabled:opacity-50 disabled:cursor-not-allowed' : ''}`;
+                prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prevBtn.disabled = !pagination.hasPrev;
+                prevBtn.onclick = () => pagination.hasPrev && changePage(pagination.currentPage - 1);
+                buttonsContainer.appendChild(prevBtn);
+
+                // Page numbers
+                const startPage = Math.max(1, pagination.currentPage - 2);
+                const endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `px-3 py-2 text-sm rounded-lg transition-colors ${i === pagination.currentPage ? 'bg-teal-600 text-white' : 'border border-gray-300 hover:bg-gray-50'}`;
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => changePage(i);
+                    buttonsContainer.appendChild(pageBtn);
+                }
+
+                // Next button
+                const nextBtn = document.createElement('button');
+                nextBtn.className = `px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ${!pagination.hasNext ? 'disabled:opacity-50 disabled:cursor-not-allowed' : ''}`;
+                nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                nextBtn.disabled = !pagination.hasNext;
+                nextBtn.onclick = () => pagination.hasNext && changePage(pagination.currentPage + 1);
+                buttonsContainer.appendChild(nextBtn);
+            }
+        }
+
+        // Main Functions
+        async function loadProducts() {
+            UIManager.showLoading();
+            
+            try {
+                // Simulate API call with mock data for demo
+                const mockResponse = await simulateAPICall();
+                
+                if (mockResponse.data.products.length === 0) {
+                    UIManager.showEmpty();
+                    return;
+                }
+
+                UIManager.showProducts();
+                TemplateRenderer.renderStatsCards(mockResponse.data.stats);
+                TemplateRenderer.renderDesktopTable(mockResponse.data.products);
+                TemplateRenderer.renderMobileCards(mockResponse.data.products);
+                TemplateRenderer.renderPagination(mockResponse.data.pagination);
+
+            } catch (error) {
+                console.error('Load Products Error:', error);
+                UIManager.showError(error.message || 'Failed to load products');
+            }
+        }
+
+        // Mock API simulation (replace with actual API calls)
+        async function simulateAPICall() {
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Mock data based on current filters
+            const mockProducts = generateMockProducts();
+            // const mockProducts = await ProductAPI.fetchProducts();
+            console.log('Mock Products:', mockProducts);
+            const filteredProducts = filterMockProducts(mockProducts);
+
+            return {
+                success: true,
+                data: {
+                    products: filteredProducts.slice((currentPage - 1) * 10, currentPage * 10),
+                    pagination: {
+                        currentPage: currentPage,
+                        totalPages: Math.ceil(filteredProducts.length / 10),
+                        totalProducts: filteredProducts.length,
+                        hasNext: currentPage < Math.ceil(filteredProducts.length / 10),
+                        hasPrev: currentPage > 1
+                    },
+                    stats: {
+                        totalProducts: mockProducts.length,
+                        publishedProducts: mockProducts.filter(p => p.status === 'published').length,
+                        lowStockProducts: mockProducts.filter(p => p.stock < 50 && p.stock > 0).length,
+                        outOfStockProducts: mockProducts.filter(p => p.stock === 0).length
+                    }
+                }
+            };
+        }
+
+        function generateMockProducts() {
+            return [
+                {
+                    _id: "507f1f77bcf86cd799439011",
+                    name: "Classic Espresso",
+                    category: "Coffee",
+                    price: 18,
+                    stock: 283,
+                    totalOrders: 1420,
+                    brand: "iGrab Premium",
+                    status: "published",
+                    image: "☕",
+                    createdAt: "2023-12-01T10:30:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439012",
+                    name: "Kunafa Supreme",
+                    category: "Sweets",
+                    price: 45,
+                    stock: 98,
+                    totalOrders: 856,
+                    brand: "Al Amoor Sweets",
+                    status: "published",
+                    image: "🧁",
+                    createdAt: "2023-11-28T15:45:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439013",
+                    name: "Turkish Delight",
+                    category: "Sweets",
+                    price: 32,
+                    stock: 154,
+                    totalOrders: 632,
+                    brand: "Heritage Sweets",
+                    status: "published",
+                    image: "🍬",
+                    createdAt: "2023-11-25T09:20:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439014",
+                    name: "Caramel Macchiato",
+                    category: "Coffee",
+                    price: 28,
+                    stock: 0,
+                    totalOrders: 445,
+                    brand: "iGrab Premium",
+                    status: "out-of-stock",
+                    image: "☕",
+                    createdAt: "2023-11-20T14:15:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439015",
+                    name: "Fresh Orange Juice",
+                    category: "Beverages",
+                    price: 15,
+                    stock: 267,
+                    totalOrders: 234,
+                    brand: "iGrab Fresh",
+                    status: "published",
+                    image: "🍊",
+                    createdAt: "2023-11-18T11:30:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439016",
+                    name: "Baklava Mix",
+                    category: "Sweets",
+                    price: 55,
+                    stock: 76,
+                    totalOrders: 389,
+                    brand: "Damascus Sweets",
+                    status: "published",
+                    image: "🥮",
+                    createdAt: "2023-11-15T16:45:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439017",
+                    name: "Americano",
+                    category: "Coffee",
+                    price: 22,
+                    stock: 145,
+                    totalOrders: 891,
+                    brand: "iGrab Premium",
+                    status: "published",
+                    image: "☕",
+                    createdAt: "2023-11-12T08:20:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439018",
+                    name: "iGrab T-Shirt",
+                    category: "Merchandise",
+                    price: 65,
+                    stock: 45,
+                    totalOrders: 67,
+                    brand: "iGrab Official",
+                    status: "draft",
+                    image: "👕",
+                    createdAt: "2023-11-10T13:10:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439019",
+                    name: "Iced Latte",
+                    category: "Beverages",
+                    price: 25,
+                    stock: 189,
+                    totalOrders: 512,
+                    brand: "iGrab Premium",
+                    status: "published",
+                    image: "🧊",
+                    createdAt: "2023-11-08T10:45:00Z"
+                },
+                {
+                    _id: "507f1f77bcf86cd799439020",
+                    name: "Ma'amoul Cookies",
+                    category: "Sweets",
+                    price: 38,
+                    stock: 234,
+                    totalOrders: 678,
+                    brand: "Traditional Treats",
+                    status: "published",
+                    image: "🍪",
+                    createdAt: "2023-11-05T12:30:00Z"
+                }
+            ];
+        }
+
+        function filterMockProducts(products) {
+            let filtered = [...products];
+
+            // Apply search filter
+            if (currentSearch) {
+                filtered = filtered.filter(product => 
+                    product.name.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                    product.brand.toLowerCase().includes(currentSearch.toLowerCase())
+                );
+            }
+
+            // Apply category filter
+            switch (currentFilter) {
+                case 'out-of-stock':
+                    filtered = filtered.filter(p => p.stock === 0);
+                    break;
+                case 'top-selling':
+                    filtered = filtered.filter(p => p.totalOrders > 500).sort((a, b) => b.totalOrders - a.totalOrders);
+                    break;
+                case 'low-stock':
+                    filtered = filtered.filter(p => p.stock < 50 && p.stock > 0);
+                    break;
+                case 'recently-added':
+                    filtered = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    break;
+            }
+
+            // Apply sorting
+            if (currentSort.field) {
+                filtered.sort((a, b) => {
+                    const aVal = a[currentSort.field];
+                    const bVal = b[currentSort.field];
+                    const modifier = currentSort.direction === 'asc' ? 1 : -1;
+                    return aVal > bVal ? modifier : aVal < bVal ? -modifier : 0;
+                });
+            }
+
+            return filtered;
+        }
+
+        // Event Handlers
+        function handleSearch(value) {
+            currentSearch = value;
+            currentPage = 1;
+            loadProducts();
+            
+            // Show/hide clear search button
+            const clearBtn = document.getElementById('clearSearch');
+            if (value) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+        }
+
+        function handleFilter(filter) {
+            currentFilter = filter;
+            currentPage = 1;
+            UIManager.updateFilterButtons(filter);
+            loadProducts();
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadProducts();
+        }
+
+        function handleSort(field) {
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+            loadProducts();
+        }
+
+        function editProduct(productId) {
+            // Redirect to edit page or open modal
+            alert(`Edit product: ${productId}`);
+        }
+
+        function confirmDelete(productId, productName) {
+            if (confirm(`Are you sure you want to delete "${productName}"?`)) {
+                deleteProduct(productId);
+            }
+        }
+
+        async function deleteProduct(productId) {
+            try {
+                // Show loading state
+                const deleteBtn = event.target;
+                const originalContent = deleteBtn.innerHTML;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                deleteBtn.disabled = true;
+
+                // Simulate API call
+                await ProductAPI.deleteProduct(productId);
+                
+                // Reload products
+                await loadProducts();
+                
+                // Show success message
+                alert('Product deleted successfully');
+                
+            } catch (error) {
+                console.error('Delete Error:', error);
+                alert('Failed to delete product: ' + error.message);
+            }
+        }
+
+        function clearFilters() {
+            currentFilter = 'all';
+            currentSearch = '';
+            currentPage = 1;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearch').classList.add('hidden');
+            UIManager.updateFilterButtons('all');
+            loadProducts();
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data
+            loadProducts();
+
+            // Setup event listeners
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => handleSearch(e.target.value), 300);
+            });
+
+            // Clear search button
+            document.getElementById('clearSearch').addEventListener('click', function() {
+                searchInput.value = '';
+                handleSearch('');
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    handleFilter(this.dataset.filter);
+                });
+            });
+
+            // Sort buttons
+            document.getElementById('sortByPrice').addEventListener('click', () => handleSort('price'));
+            document.getElementById('sortByOrders').addEventListener('click', () => handleSort('totalOrders'));
+
+            // Action buttons
+            document.getElementById('retryBtn').addEventListener('click', loadProducts);
+            document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+            document.getElementById('addProductBtn').addEventListener('click', function() {
+                alert('Redirect to Add Product page');
+            });
+        });
+
+        /* 
+        BACKEND API DOCUMENTATION:
+
+        Expected API Endpoints:
+
+        1. GET /api/products
+           Query Parameters:
+           - page: number (default: 1)
+           - limit: number (default: 10)
+           - search: string (optional)
+           - filter: string (all, out-of-stock, top-selling, low-stock, recently-added)
+           - sortField: string (price, totalOrders, createdAt)
+           - sortDirection: string (asc, desc)
+
+           Expected Response:
+           {
+             "success": true,
+             "data": {
+               "products": [
+                 {
+                   "_id": "507f1f77bcf86cd799439011",
+                   "name": "Classic Espresso",
+                   "category": "Coffee",
+                   "price": 18,
+                   "stock": 283,
+                   "totalOrders": 1420,
+                   "brand": "iGrab Premium",
+                   "status": "published",
+                   "image": "image_url_or_emoji",
+                   "createdAt": "2023-12-01T10:30:00Z"
+                 }
+               ],
+               "pagination": {
+                 "currentPage": 1,
+                 "totalPages": 25,
+                 "totalProducts": 247,
+                 "hasNext": true,
+                 "hasPrev": false
+               },
+               "stats": {
+                 "totalProducts": 247,
+                 "publishedProducts": 198,
+                 "lowStockProducts": 12,
+                 "outOfStockProducts": 8
+               }
+             }
+           }
+
+        2. DELETE /api/products/:id
+           Expected Response:
+           {
+             "success": true,
+             "message": "Product deleted successfully"
+           }
+
+        Error Response Format:
+        {
+          "success": false,
+          "message": "Error description",
+          "code": "ERROR_CODE"
+        }
+        */
+    </script>
+<%- include('./partials/Footer') %>

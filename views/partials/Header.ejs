@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iGrab Story Cafe - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2F8A7B;
+            --primary-dark: #1F5A4F;
+            --accent-color: #F59E0B;
+            --accent-dark: #D97706;
+        }
+
+        .bg-primary {
+            background-color: var(--primary-color);
+        }
+
+        .bg-primary-dark {
+            background-color: var(--primary-dark);
+        }
+
+        .bg-accent {
+            background-color: var(--accent-color);
+        }
+
+        .bg-accent-dark {
+            background-color: var(--accent-dark);
+        }
+
+        .text-primary {
+            color: var(--primary-color);
+        }
+
+        .text-accent {
+            color: var(--accent-color);
+        }
+
+        .border-primary {
+            border-color: var(--primary-color);
+        }
+
+        .sidebar-overlay {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sidebar-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .nav-item {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(47, 138, 123, 0.1);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .nav-item.active:hover {
+            background-color: var(--primary-dark);
+            transform: translateX(0);
+        }
+
+        .brand-logo {
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .dropdown-toggle:focus+.dropdown-menu,
+        .dropdown-menu:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-in-out;
+        }
+
+        @media (max-width: 480px) {
+            .bottom-nav {
+                display: flex;
+            }
+
+            .main-content {
+                padding-bottom: 80px;
+            }
+        }
+
+        @media (min-width: 481px) {
+            .bottom-nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-backdrop"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" style="z-index: 100;"
+        class="fixed left-0 top-0 h-full w-80 bg-white shadow-lg z-50 sidebar-overlay">
+        <div class="flex flex-col h-full">
+            <!-- Sidebar Header -->
+            <div class="p-6 border-b border-gray-200 bg-primary">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                            <i class="fas fa-coffee text-primary text-sm"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-white font-bold text-lg">iGrab Story</h2>
+                            <p class="text-white text-sm opacity-90">Admin Panel</p>
+                        </div>
+                    </div>
+                    <button id="closeSidebar" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="flex-1 p-4 space-y-2">
+                <a onclick="open_url('')" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a onclick="open_url('orders')"
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                    <i class="fas fa-shopping-cart w-5"></i>
+                    <span class="font-medium">Orders</span>
+                    <!-- <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">12</span> -->
+                </a>
+                <a onclick="open_url('product')"
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                    <i class="fas fa-coffee w-5"></i>
+                    <span class="font-medium">Products</span>
+                </a>
+                <!-- <a href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                    <i class="fas fa-boxes w-5"></i>
+                    <span class="font-medium">Inventory</span>
+                </a> -->
+                <!-- <a href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="font-medium">Customers</span>
+                </a> -->
+                <a onclick="open_url('delivery-executive')"
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                    <i class="fas fa-motorcycle w-5"></i>
+                    <span class="font-medium">Delivery Executives</span>
+                </a>
+                <% if (admin && admin.role==='superadmin' ) { %>
+                    <a onclick="open_url('setting/admin-user')"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                        <i class="fas fa-user-shield w-5"></i>
+                        <span class="font-medium">Admin Users</span>
+                    </a>
+                    <% } %>
+
+                        <!-- <a href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="font-medium">Analytics</span>
+                </a> -->
+                        <a onclick="open_url('contacts')"
+                            class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                            <i class="fas fa-envelope-open-text w-5"></i>
+                            <span class="font-medium">Inquiries</span>
+                        </a>
+                        <a onclick="open_url('setting')"
+                            class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                            <i class="fas fa-cog w-5"></i>
+                            <span class="font-medium">Settings</span>
+                        </a>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg">
+                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900">Admin User</p>
+                        <p class="text-sm text-gray-500">Manager</p>
+                    </div>
+                    <button id="logOut-btn" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen">
+        <!-- Top Navigation -->
+        <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between px-4 py-3">
+                <!-- Left Side -->
+                <div class="flex items-center space-x-4">
+                    <button id="menuToggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-bars text-gray-600 text-lg"></i>
+                    </button>
+                    <div class="hidden sm:block">
+                        <h1 class="text-xl font-bold text-gray-900">Dashboard</h1>
+                    </div>
+                </div>
+
+                <!-- Center - Brand Logo (Mobile) -->
+                <div class="sm:hidden">
+                    <span class="brand-logo text-lg">iGrab Story</span>
+                </div>
+
+                <!-- Right Side -->
+                <div class="flex items-center space-x-4">
+                    <!-- Branch Selector -->
+                    <% if (admin) { %>
+                        <div class="relative">
+                            <button
+                                class="dropdown-toggle flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-store text-gray-600"></i>
+                                <span id="branch-name" class="hidden sm:inline text-sm font-medium text-gray-700">
+                                    <%= admin.branchName || 'NA' %>
+                                </span>
+                                <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                            </button>
+                            <div
+                                class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                                <% for (let i=0; i < admin.allBranches.length; i++) { %>
+                                    <a onclick="change_branch('<%= admin.allBranches[i]._id %>')"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <%= admin.allBranches[i].name || 'NA' %>
+                                    </a>
+                                    <% } %>
+
+                            </div>
+                        </div>
+                        <% } %>
+                            <!-- Notifications -->
+                            <!-- <button class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                    </button> -->
+
+                            <!-- User Menu -->
+                            <!-- <div class="relative">
+                        <button class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white text-sm"></i>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs hidden sm:block"></i>
+                        </button>
+                    </div> -->
+                </div>
+            </div>
+        </header>
+
+        <script>
+            document.getElementById('logOut-btn').addEventListener('click', function () {
+                fetch('/api/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = '/';
+                        } else {
+                            // showToast('Logout failed. Please try again.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        </script>

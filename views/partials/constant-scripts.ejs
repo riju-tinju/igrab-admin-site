@@ -1,0 +1,28 @@
+<!-- views/partials/common-functions.ejs -->
+<script>
+  // Universal URL opener function
+  function open_url(path) {
+    window.location.href = `/${path}`;
+  }
+  async function change_branch(branchId) {
+    // Assuming you have a function to handle branch change
+    // This function should update the selected branch in the session or database
+    await fetch(`/change-branch/${branchId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Reload the page or update the UI accordingly
+        window.location.reload();
+      } else {
+        console.error('Error changing branch:', data.message);
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+</script>

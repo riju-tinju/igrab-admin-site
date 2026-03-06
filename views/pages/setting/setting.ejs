@@ -1,0 +1,2332 @@
+<%- include('../../partials/Header') %>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>iGrab Cafe - Settings Dashboard</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    </head>
+
+    <body class="bg-gray-100">
+        <style>
+            .brand-teal {
+                background-color: #1E7065;
+            }
+
+            .brand-teal-light {
+                background-color: #2F8A7B;
+            }
+
+            .brand-orange {
+                background-color: #F59E0B;
+            }
+
+            .text-brand-teal {
+                color: #1E7065;
+            }
+
+            .border-brand-teal {
+                border-color: #1E7065;
+            }
+
+            .hover-brand-teal:hover {
+                background-color: #1E7065;
+            }
+
+            .tab-button {
+                transition: all 0.3s ease;
+                border-bottom: 3px solid transparent;
+            }
+
+            .tab-button.active {
+                border-bottom-color: #1E7065;
+                background-color: #f0f9f7;
+                color: #1E7065;
+            }
+
+            .tab-button:hover {
+                background-color: #f9fafb;
+            }
+
+            .tab-content {
+                display: none;
+            }
+
+            .tab-content.active {
+                display: block;
+                animation: fadeIn 0.3s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .loading-spinner {
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #1E7065;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+            }
+
+            .modal.show {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background-color: white;
+                padding: 24px;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 600px;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+
+            .toast {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1001;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            }
+
+            .toast.show {
+                transform: translateX(0);
+            }
+
+            .toast.success {
+                background-color: #10b981;
+            }
+
+            .toast.error {
+                background-color: #ef4444;
+            }
+
+            .toast.warning {
+                background-color: #f59e0b;
+            }
+
+            .toggle-switch {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 34px;
+            }
+
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: .4s;
+                border-radius: 34px;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+
+            input:checked+.slider {
+                background-color: #1E7065;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(26px);
+            }
+
+            .upload-area {
+                border: 2px dashed #cbd5e0;
+                border-radius: 8px;
+                padding: 32px;
+                text-align: center;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+
+            .upload-area:hover {
+                border-color: #1E7065;
+                background-color: #f0f9f7;
+            }
+
+            .upload-area.dragover {
+                border-color: #1E7065;
+                background-color: #f0f9f7;
+            }
+
+            .image-preview {
+                position: relative;
+                display: inline-block;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .image-preview img {
+                width: 150px;
+                height: 150px;
+                object-fit: cover;
+            }
+
+            .image-preview .remove-btn {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: rgba(239, 68, 68, 0.9);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+
+            .branch-card {
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .branch-card:hover {
+                border-left-color: #1E7065;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .charge-card {
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .charge-card:hover {
+                border-left-color: #F59E0B;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            @media (max-width: 768px) {
+                .modal-content {
+                    width: 95%;
+                    margin: 10px;
+                    padding: 16px;
+                }
+
+                .tab-buttons {
+                    overflow-x: auto;
+                    white-space: nowrap;
+                }
+
+                .tab-button {
+                    min-width: 120px;
+                }
+
+                .tab-content {
+                    margin-bottom: 80px;
+                }
+            }
+        </style>
+
+        <!-- Header Section -->
+        <header class="brand-teal text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <button id="backBtn"
+                            class="mr-4 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h1 class="text-xl font-bold">Settings Dashboard</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                            <i class="fas fa-cog mr-1"></i>Admin Settings
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-lg shadow-sm border mb-6">
+                <div class="tab-buttons overflow-x-auto">
+                    <div class="flex border-b">
+                        <button class="tab-button active px-6 py-4 font-medium text-sm" onclick="switchTab('business')">
+                            <i class="fas fa-building mr-2"></i>Business Info
+                        </button>
+                        <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('branches')">
+                            <i class="fas fa-store mr-2"></i>Branches
+                        </button>
+                        <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('payment')">
+                            <i class="fas fa-credit-card mr-2"></i>Payment
+                        </button>
+                        <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('seo')">
+                            <i class="fas fa-search mr-2"></i>SEO
+                        </button>
+                        <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('charges')">
+                            <i class="fas fa-money-bill mr-2"></i>Charges
+                        </button>
+                        <button class="tab-button px-6 py-4 font-medium text-sm"
+                            onclick="switchTab('delivery-charges')">
+                            <i class="fas fa-truck mr-2"></i>Delivery Charges
+                        </button>
+                        <!-- <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('system')">
+                        <i class="fas fa-info-circle mr-2"></i>System
+                    </button> -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Information Tab -->
+            <div id="business" class="tab-content active">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">Business Information</h2>
+                        <button id="saveBusinessBtn"
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium flex items-center">
+                            <span class="btn-text">
+                                <i class="fas fa-save mr-2"></i>Save Changes
+                            </span>
+                            <span class="btn-loading hidden">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Saving...
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Logo Upload -->
+                        <div class="lg:col-span-2">
+                            <label class="hidden block text-sm font-semibold text-gray-700 mb-2">Business Logo</label>
+                            <div class="hidden upload-area" id="logoUploadArea">
+                                <div id="logoUploadPlaceholder">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                                    <p class="text-gray-600">Click to upload or drag and drop</p>
+                                    <p class="text-sm text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+                                </div>
+                                <div id="logoPreview" class="hidden">
+                                    <div class="image-preview">
+                                        <img id="logoImage" src="" alt="Logo Preview">
+                                        <button class="remove-btn" onclick="removeLogo()">×</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="file" id="logoInput" accept="image/*" style="display: none;">
+                        </div>
+
+                        <!-- Business Name -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Business Name *</label>
+                            <input type="text" id="businessName"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Enter business name">
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                            <input type="tel" id="businessPhone"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="+971 50 123 4567">
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                            <input type="email" id="businessEmail"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="info@business.com">
+                        </div>
+
+                        <!-- Currency (Read-only) -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Default Currency</label>
+                            <input type="text" value="AED"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                        </div>
+
+                        <!-- About Us -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">About Us</label>
+                            <textarea id="businessAbout" rows="4"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Brief description about your business..."></textarea>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Business Address</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <input type="text" id="businessStreet"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="Street Address">
+                                </div>
+                                <div>
+                                    <input type="text" id="businessCity"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="City">
+                                </div>
+                                <div>
+                                    <input type="text" id="businessCountry"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="Country">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branches Tab -->
+            <div id="branches" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <h2 class="text-xl font-bold text-gray-900">Store Branches</h2>
+                        <button id="addBranchBtn"
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add Branch
+                        </button>
+                    </div>
+
+                    <div id="branchesContainer" class="p-6">
+                        <!-- Branches will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Tab -->
+            <div id="payment" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">Payment Integration</h2>
+                        <button id="savePaymentBtn"
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-save mr-2"></i>Save Changes
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Stripe Configuration -->
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Stripe Payment</h3>
+                                    <p class="text-sm text-gray-600">Configure Stripe payment gateway</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="stripeToggle" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Publishable
+                                        Key</label>
+                                    <input type="text" id="stripePublishableKey"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="pk_test_...">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Secret Key</label>
+                                    <input type="password" id="stripeSecretKey"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="sk_test_...">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Webhook Secret</label>
+                                    <input type="password" id="stripeWebhookSecret"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="whsec_...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cash on Delivery -->
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Cash on Delivery (COD)</h3>
+                                    <p class="text-sm text-gray-600">Allow customers to pay with cash on delivery</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="codToggle" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO Tab -->
+            <div id="seo" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">SEO & Metadata</h2>
+                        <button id="saveSeoBtn"
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-save mr-2"></i>Save Changes
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Home Page Title -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Home Page Title</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">English</label>
+                                    <input type="text" id="homeTitleEn"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="iGrab - Premium Coffee Experience">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Arabic</label>
+                                    <input type="text" id="homeTitleAr"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="آي جراب - تجربة قهوة مميزة">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Meta Description</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">English</label>
+                                    <textarea id="metaDescriptionEn" rows="3"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="Order premium coffee online..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Arabic</label>
+                                    <textarea id="metaDescriptionAr" rows="3"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="اطلب قهوة مميزة عبر الإنترنت..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Meta Keywords -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Meta Keywords</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">English</label>
+                                    <input type="text" id="metaKeywordsEn"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="coffee, dubai, delivery">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Arabic</label>
+                                    <input type="text" id="metaKeywordsAr"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="قهوة، دبي، توصيل">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Favicon -->
+                            <div>
+                                <label class="hidden block text-sm font-semibold text-gray-700 mb-2">Favicon</label>
+                                <div class="upload-area hidden" id="faviconUploadArea">
+                                    <div id="faviconUploadPlaceholder">
+                                        <i class="fas fa-file-image text-2xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600">Upload Favicon</p>
+                                        <p class="text-xs text-gray-500">16x16 ICO or PNG</p>
+                                    </div>
+                                    <div id="faviconPreview" class="hidden">
+                                        <div class="image-preview">
+                                            <img id="faviconImage" src="" alt="Favicon Preview">
+                                            <button class="remove-btn" onclick="removeFavicon()">×</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="file" id="faviconInput" accept="image/*" style="display: none;">
+                            </div>
+
+                            <!-- OG Image -->
+                            <div>
+                                <label class="hidden block text-sm font-semibold text-gray-700 mb-2">Social Sharing
+                                    Image</label>
+                                <div class="hidden upload-area" id="ogImageUploadArea">
+                                    <div id="ogImageUploadPlaceholder">
+                                        <i class="fas fa-share-alt text-2xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600">Upload OG Image</p>
+                                        <p class="text-xs text-gray-500">1200x630 PNG or JPG</p>
+                                    </div>
+                                    <div id="ogImagePreview" class="hidden">
+                                        <div class="image-preview">
+                                            <img id="ogImageImage" src="" alt="OG Image Preview">
+                                            <button class="remove-btn" onclick="removeOgImage()">×</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="file" id="ogImageInput" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charges Tab -->
+            <!-- Charges Tab -->
+            <div id="charges" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <h2 class="text-xl font-bold text-gray-900">Charges Management</h2>
+                        <button id="addChargeBtn"
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add Charge
+                        </button>
+                    </div>
+
+                    <div id="chargesContainer" class="p-6">
+                        <!-- Charges will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Charges Tab -->
+            <div id="delivery-charges" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <h2 class="text-xl font-bold text-gray-900">Delivery Charges (UAE)</h2>
+                        <button onclick="openDeliveryChargeModal()"
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add Delivery Charge
+                        </button>
+                    </div>
+
+                    <div id="deliveryChargesContainer" class="p-6">
+                        <!-- Delivery Charges will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <!-- <div id="system" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">System Information</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="systemInfoContainer"> -->
+            <!-- System info will be loaded here -->
+            <!-- </div>
+            </div>
+        </div> -->
+        </main>
+
+        <!-- Branch Modal -->
+        <div id="branchModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900" id="branchModalTitle">Add New Branch</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('branchModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="branchForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Branch Name *</label>
+                            <input type="text" id="branchName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Enter branch name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                            <input type="email" id="branchEmail"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="branch@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
+                            <textarea id="branchAddress" required rows="3"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Complete address"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number</label>
+                            <input type="tel" id="branchContactNumber"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="+971 50 123 4567">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Latitude</label>
+                                <input type="number" id="branchLat" step="any" readonly
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                                    placeholder="0.000000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Longitude</label>
+                                <input type="number" id="branchLng" step="any" readonly
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                                    placeholder="0.000000">
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" onclick="openBranchMapModal()"
+                                class="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-teal-500 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-medium">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Set Location on Map
+                            </button>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" onclick="closeModal('branchModal')"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                <span class="btn-text">Save Branch</span>
+                                <span class="btn-loading hidden">
+                                    <div class="loading-spinner"></div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Charge Modal -->
+        <div id="chargeModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900" id="chargeModalTitle">Add New Charge</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('chargeModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="chargeForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Charge Name *</label>
+                            <input type="text" id="chargeName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Enter charge name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Type *</label>
+                            <select id="chargeType" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="">Select type</option>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="number">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Value *</label>
+                            <input type="number" id="chargeValue" required step="0.01"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Enter value">
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" onclick="closeModal('chargeModal')"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                <span class="btn-text">Save Charge</span>
+                                <span class="btn-loading hidden">
+                                    <div class="loading-spinner"></div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delivery Charge Modal -->
+        <div id="deliveryChargeModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900" id="deliveryChargeModalTitle">Add Delivery Charge (UAE)
+                    </h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('deliveryChargeModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="deliveryChargeForm">
+                    <div class="space-y-4">
+                        <!-- Emirate Selection -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Select Emirate *</label>
+                            <select id="dcEmirate" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="">Select Emirate</option>
+                                <option value="Abu Dhabi">Abu Dhabi</option>
+                                <option value="Dubai">Dubai</option>
+                                <option value="Sharjah">Sharjah</option>
+                                <option value="Ajman">Ajman</option>
+                                <option value="Umm Al Quwain">Umm Al Quwain</option>
+                                <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                                <option value="Fujairah">Fujairah</option>
+                            </select>
+                        </div>
+
+                        <!-- Charge Type Selection -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Charge Type *</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="chargeType" value="fixed"
+                                        class="form-radio text-teal-600 h-5 w-5" checked
+                                        onchange="toggleDeliveryChargeInputs()">
+                                    <span class="ml-2 font-medium">Fixed Rate</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="chargeType" value="distance"
+                                        class="form-radio text-teal-600 h-5 w-5"
+                                        onchange="toggleDeliveryChargeInputs()">
+                                    <span class="ml-2 font-medium">Distance Based</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Fixed Rate Input -->
+                        <div id="fixedChargeInput">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Fixed Rate (AED) *</label>
+                            <input type="number" id="dcFixedRate" step="0.01" min="0"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="e.g. 15.00">
+                        </div>
+
+                        <!-- Distance Based Inputs -->
+                        <div id="distanceChargeInput" class="hidden space-y-4">
+                            <div class="p-3 bg-blue-50 text-blue-800 rounded-lg text-sm">
+                                <i class="fas fa-info-circle mr-1"></i> Calculation: Base Cost + ((Total Km - Base
+                                Distance) * Extra Cost)
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Base Distance
+                                        (Km)</label>
+                                    <input type="number" id="dcBaseDistance" step="0.1" min="0" value="10"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Base Cost
+                                        (AED)</label>
+                                    <input type="number" id="dcBaseCost" step="0.01" min="0"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="e.g. 15.00">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Extra Cost per Km
+                                        (AED)</label>
+                                    <input type="number" id="dcExtraCost" step="0.01" min="0"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        placeholder="e.g. 2.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" onclick="closeModal('deliveryChargeModal')"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                                <span class="btn-text">Save Configuration</span>
+                                <span class="btn-loading hidden">
+                                    <div class="loading-spinner"></div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-red-800">Confirm Delete</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('deleteModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3 p-4 bg-red-50 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                        <div>
+                            <h4 class="font-semibold text-red-800">Are you sure?</h4>
+                            <p class="text-sm text-red-700">This action cannot be undone.</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal('deleteModal')"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" id="confirmDeleteBtn"
+                            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            <span class="btn-text">Delete</span>
+                            <span class="btn-loading hidden">
+                                <div class="loading-spinner"></div>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch Map Modal (Location Picker) -->
+        <div id="branchMapModal" class="modal">
+            <div class="modal-content max-w-4xl" style="height: 80vh; display: flex; flex-direction: column;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Select Branch Location</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700 p-2"
+                        onclick="closeModal('branchMapModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <input id="branchMapSearch" type="text" placeholder="Search for location..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                <div id="branchGoogleMap" class="flex-grow rounded-lg border border-gray-200"
+                    style="min-height: 400px;"></div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('branchMapModal')"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="confirmBranchLocation()"
+                        class="brand-teal text-white px-6 py-2 rounded-lg font-medium">
+                        Confirm Location
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toastContainer"></div>
+
+        <script>
+            // API Configuration
+            const API_BASE_URL = '/api';
+            let currentEditingBranch = null;
+            let currentEditingCharge = null;
+            let currentEditingDeliveryCharge = null;
+            let currentDeleteItem = null;
+            let currentDeleteType = null;
+
+            // Branch Map Variables
+            let branchMap;
+            let branchMarker;
+            let branchGeocoder;
+            let branchSearchBox;
+            let selectedBranchLocation = null;
+
+            function initBranchMap() {
+                const defaultLoc = { lat: 25.3463, lng: 55.4209 }; // Sharjah
+
+                branchMap = new google.maps.Map(document.getElementById("branchGoogleMap"), {
+                    zoom: 13,
+                    center: defaultLoc,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                    streetViewControl: false
+                });
+
+                branchGeocoder = new google.maps.Geocoder();
+
+                // Search Box
+                const input = document.getElementById("branchMapSearch");
+                branchSearchBox = new google.maps.places.SearchBox(input);
+
+                branchMap.addListener("bounds_changed", () => {
+                    branchSearchBox.setBounds(branchMap.getBounds());
+                });
+
+                branchSearchBox.addListener("places_changed", () => {
+                    const places = branchSearchBox.getPlaces();
+                    if (places.length === 0) return;
+
+                    const place = places[0];
+                    if (!place.geometry || !place.geometry.location) return;
+
+                    setBranchMarker(place.geometry.location);
+                    branchMap.setCenter(place.geometry.location);
+                    branchMap.setZoom(17);
+                });
+
+                branchMap.addListener("click", (e) => {
+                    setBranchMarker(e.latLng);
+                });
+            }
+
+            function setBranchMarker(latLng) {
+                if (branchMarker) {
+                    branchMarker.setPosition(latLng);
+                } else {
+                    branchMarker = new google.maps.Marker({
+                        position: latLng,
+                        map: branchMap,
+                        animation: google.maps.Animation.DROP
+                    });
+                }
+                selectedBranchLocation = {
+                    lat: latLng.lat(),
+                    lng: latLng.lng()
+                };
+            }
+
+            function openBranchMapModal() {
+                openModal('branchMapModal');
+                // Fix map rendering when shown
+                setTimeout(() => {
+                    if (branchMap) {
+                        google.maps.event.trigger(branchMap, "resize");
+                        if (selectedBranchLocation) {
+                            branchMap.setCenter(selectedBranchLocation);
+                        } else {
+                            // Default or existing branch location
+                            const lat = parseFloat(document.getElementById('branchLat').value);
+                            const lng = parseFloat(document.getElementById('branchLng').value);
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                const loc = { lat, lng };
+                                branchMap.setCenter(loc);
+                                setBranchMarker(new google.maps.LatLng(lat, lng));
+                            }
+                        }
+                    }
+                }, 300);
+            }
+
+            function confirmBranchLocation() {
+                if (selectedBranchLocation) {
+                    document.getElementById('branchLat').value = selectedBranchLocation.lat.toFixed(6);
+                    document.getElementById('branchLng').value = selectedBranchLocation.lng.toFixed(6);
+                    closeModal('branchMapModal');
+                } else {
+                    ToastManager.show('Please select a location on the map', 'warning');
+                }
+            }
+
+            // Toast Manager
+            class ToastManager {
+                static show(message, type = 'success', duration = 3000) {
+                    const toast = document.createElement('div');
+                    toast.className = `toast ${type}`;
+                    toast.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'} mr-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                    document.getElementById('toastContainer').appendChild(toast);
+                    setTimeout(() => toast.classList.add('show'), 100);
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, duration);
+                }
+            }
+
+            // API Functions with Comments
+            async function loadBusinessInfo() {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/settings/business`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load business info');
+                    }
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // const data = {
+                    //     success: true,
+                    //     data: {
+                    //         businessName: "iGrab Cafe",
+                    //         logo: "https://via.placeholder.com/150/1E7065/ffffff?text=iGrab",
+                    //         aboutUs: "Premium coffee experience with fresh ingredients and exceptional service.",
+                    //         phone: "+971501234567",
+                    //         email: "info@igrab.com",
+                    //         currency: "AED",
+                    //         address: {
+                    //             street: "Sheikh Zayed Road",
+                    //             city: "Dubai",
+                    //             country: "UAE"
+                    //         }
+                    //     }
+                    // };
+
+                    if (data.data) {
+                        // Populate form fields
+                        document.getElementById('businessName').value = data.data.businessName || '';
+                        document.getElementById('businessPhone').value = data.data.phone || '';
+                        document.getElementById('businessEmail').value = data.data.email || '';
+                        document.getElementById('businessAbout').value = data.data.aboutUs || '';
+                        document.getElementById('businessStreet').value = data.data.address?.street || '';
+                        document.getElementById('businessCity').value = data.data.address?.city || '';
+                        document.getElementById('businessCountry').value = data.data.address?.country || '';
+
+                        if (data.data.logo) {
+                            showLogoPreview(data.data.logo);
+                        }
+                    } else {
+                        // Just show an info message if it's the first time
+                        console.log('No business info found, ready for initial configuration.');
+                    }
+                } catch (error) {
+                    console.error('Load Business Info Error:', error);
+                    ToastManager.show('Failed to load business information: ' + error.message, 'error');
+                }
+            }
+
+            async function saveBusinessInfo() {
+                try {
+                    const businessData = {
+                        businessName: document.getElementById('businessName').value.trim(),
+                        phone: document.getElementById('businessPhone').value.trim(),
+                        email: document.getElementById('businessEmail').value.trim(),
+                        aboutUs: document.getElementById('businessAbout').value.trim(),
+                        address: {
+                            street: document.getElementById('businessStreet').value.trim(),
+                            city: document.getElementById('businessCity').value.trim(),
+                            country: document.getElementById('businessCountry').value.trim(),
+                        }
+                    };
+
+                    // Basic frontend validation
+                    if (!businessData.businessName || !businessData.phone || !businessData.email ||
+                        !businessData.address.street || !businessData.address.city || !businessData.address.country) {
+                        ToastManager.show('Please fill in all required fields (Name, Phone, Email, Address)', 'warning');
+                        return;
+                    }
+
+                    const btn = document.getElementById('saveBusinessBtn');
+                    const text = btn.querySelector('.btn-text');
+                    const loading = btn.querySelector('.btn-loading');
+
+                    text.classList.add('hidden');
+                    loading.classList.remove('hidden');
+                    btn.disabled = true;
+
+                    const response = await fetch(`${API_BASE_URL}/settings/business`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(businessData)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Failed to save business info');
+                    }
+
+                    ToastManager.show('Business information updated successfully', 'success');
+                } catch (error) {
+                    console.error('Save Business Info Error:', error);
+                    ToastManager.show('Failed to save business information: ' + error.message, 'error');
+                }
+            }
+
+            async function uploadLogo(file) {
+                try {
+                    const formData = new FormData();
+                    formData.append('logo', file);
+
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    // const response = await fetch(`${API_BASE_URL}/settings/upload-logo`, {
+                    //     method: 'POST',
+                    //     body: formData
+                    // });
+                    // if (!response.ok) {
+                    //     const errorData = await response.json();
+                    //     throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    // }
+                    // const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const data = {
+                        success: true,
+                        data: {
+                            logoUrl: URL.createObjectURL(file)
+                        }
+                    };
+
+                    return data.data.logoUrl;
+                } catch (error) {
+                    console.error('Upload Logo Error:', error);
+                    throw error;
+                }
+            }
+
+            async function loadBranches() {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/branches`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load branches');
+                    }
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // const data = {
+                    //     success: true,
+                    //     data: {
+                    //         branches: [
+                    //             {
+                    //                 _id: "branch1",
+                    //                 name: "Downtown Dubai Branch",
+                    //                 email: "downtown@igrab.com",
+                    //                 address: "Sheikh Zayed Road, Downtown Dubai, UAE",
+                    //                 contactNumber: "+971501234567",
+                    //                 isActive: true,
+                    //                 createdAt: "2023-11-15T09:20:00Z"
+                    //             },
+                    //             {
+                    //                 _id: "branch2",
+                    //                 name: "Marina Mall Branch",
+                    //                 email: "marina@igrab.com",
+                    //                 address: "Dubai Marina Mall, Dubai Marina, UAE",
+                    //                 contactNumber: "+971507654321",
+                    //                 isActive: true,
+                    //                 createdAt: "2023-12-01T14:30:00Z"
+                    //             }
+                    //         ]
+                    //     }
+                    // };
+
+                    renderBranches(data.data.branches);
+                } catch (error) {
+                    console.error('Load Branches Error:', error);
+                    ToastManager.show('Failed to load branches: ' + error.message, 'error');
+                }
+            }
+
+            async function saveBranch(branchData) {
+                try {
+                    const isEditing = currentEditingBranch !== null;
+                    const url = isEditing ?
+                        `${API_BASE_URL}/branches/${currentEditingBranch}` :
+                        `${API_BASE_URL}/branches`;
+                    const method = isEditing ? 'PUT' : 'POST';
+
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(branchData)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // const data = {
+                    //     success: true,
+                    //     message: isEditing ? 'Branch updated successfully' : 'Branch created successfully',
+                    //     data: {
+                    //         branch: {
+                    //             _id: currentEditingBranch || 'new_branch_id',
+                    //             ...branchData,
+                    //             isActive: true,
+                    //             createdAt: new Date().toISOString()
+                    //         }
+                    //     }
+                    // };
+
+                    ToastManager.show(data.message, 'success');
+                    closeModal('branchModal');
+                    loadBranches();
+                } catch (error) {
+                    console.error('Save Branch Error:', error);
+                    ToastManager.show('Failed to save branch: ' + error.message, 'error');
+                }
+            }
+
+            async function deleteBranch(branchId) {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/branches/${branchId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // const data = {
+                    //     success: true,
+                    //     message: 'Branch deleted successfully'
+                    // };
+
+                    ToastManager.show(data.message, 'success');
+                    closeModal('deleteModal');
+                    loadBranches();
+                } catch (error) {
+                    console.error('Delete Branch Error:', error);
+                    ToastManager.show('Failed to delete branch: ' + error.message, 'error');
+                }
+            }
+
+            async function loadPaymentSettings() {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/settings/payment`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load payment settings');
+                    }
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // const data = {
+                    //     success: true,
+                    //     data: {
+                    //         stripe: {
+                    //             publishableKey: "pk_test_51234567890abcdef",
+                    //             secretKey: "sk_test_*********************",
+                    //             isEnabled: true
+                    //         },
+                    //         cod: {
+                    //             isEnabled: true
+                    //         },
+                    //         wallet: {
+                    //             isEnabled: false
+                    //         }
+                    //     }
+                    // };
+
+                    // Populate form fields
+                    document.getElementById('stripePublishableKey').value = data.data.stripe.publishableKey || '';
+                    document.getElementById('stripeSecretKey').value = data.data.stripe.secretKey || '';
+                    document.getElementById('stripeWebhookSecret').value = data.data.stripe.webhookSecret || '';
+                    document.getElementById('stripeToggle').checked = data.data.stripe.isEnabled || false;
+                    document.getElementById('codToggle').checked = data.data.cod.isEnabled || false;
+                } catch (error) {
+                    console.error('Load Payment Settings Error:', error);
+                    ToastManager.show('Failed to load payment settings: ' + error.message, 'error');
+                }
+            }
+
+            async function savePaymentSettings() {
+                try {
+                    const paymentData = {
+                        stripe: {
+                            publishableKey: document.getElementById('stripePublishableKey').value.trim(),
+                            secretKey: document.getElementById('stripeSecretKey').value.trim(),
+                            webhookSecret: document.getElementById('stripeWebhookSecret').value.trim(),
+                            isEnabled: document.getElementById('stripeToggle').checked
+                        },
+                        cod: {
+                            isEnabled: document.getElementById('codToggle').checked
+                        }
+                    };
+
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/settings/payment`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(paymentData)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // const data = { success: true, message: 'Payment settings updated successfully' };
+
+                    ToastManager.show(data.message, 'success');
+                } catch (error) {
+                    console.error('Save Payment Settings Error:', error);
+                    ToastManager.show('Failed to save payment settings: ' + error.message, 'error');
+                }
+            }
+
+            async function loadSeoSettings() {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/settings/seo`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load SEO settings');
+                    }
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // const data = {
+                    //     success: true,
+                    //     data: {
+                    //         homeTitle: {
+                    //             en: "iGrab - Premium Coffee Experience",
+                    //             ar: "آي جراب - تجربة قهوة مميزة"
+                    //         },
+                    //         metaDescription: {
+                    //             en: "Order premium coffee online from iGrab Cafe with fast delivery in Dubai.",
+                    //             ar: "اطلب قهوة مميزة عبر الإنترنت من مقهى آي جراب مع توصيل سريع في دبي."
+                    //         },
+                    //         metaKeywords: {
+                    //             en: "coffee, dubai, delivery, premium, cafe",
+                    //             ar: "قهوة، دبي، توصيل، مميز، مقهى"
+                    //         },
+                    //         favicon: null,
+                    //         ogImage: null
+                    //     }
+                    // };
+
+                    // Populate form fields
+                    document.getElementById('homeTitleEn').value = data.data.homeTitle.en || '';
+                    document.getElementById('homeTitleAr').value = data.data.homeTitle.ar || '';
+                    document.getElementById('metaDescriptionEn').value = data.data.metaDescription.en || '';
+                    document.getElementById('metaDescriptionAr').value = data.data.metaDescription.ar || '';
+                    document.getElementById('metaKeywordsEn').value = data.data.metaKeywords.en || '';
+                    document.getElementById('metaKeywordsAr').value = data.data.metaKeywords.ar || '';
+                } catch (error) {
+                    console.error('Load SEO Settings Error:', error);
+                    ToastManager.show('Failed to load SEO settings: ' + error.message, 'error');
+                }
+            }
+
+            async function saveSeoSettings() {
+                try {
+                    const seoData = {
+                        homeTitle: {
+                            en: document.getElementById('homeTitleEn').value.trim(),
+                            ar: document.getElementById('homeTitleAr').value.trim()
+                        },
+                        metaDescription: {
+                            en: document.getElementById('metaDescriptionEn').value.trim(),
+                            ar: document.getElementById('metaDescriptionAr').value.trim()
+                        },
+                        metaKeywords: {
+                            en: document.getElementById('metaKeywordsEn').value.trim(),
+                            ar: document.getElementById('metaKeywordsAr').value.trim()
+                        }
+                    };
+
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/settings/seo`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(seoData)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // const data = { success: true, message: 'SEO settings updated successfully' };
+
+                    ToastManager.show(data.message, 'success');
+                } catch (error) {
+                    console.error('Save SEO Settings Error:', error);
+                    ToastManager.show('Failed to save SEO settings: ' + error.message, 'error');
+                }
+            }
+
+            async function loadCharges() {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/charges`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load charges');
+                    }
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // const data = {
+                    //     success: true,
+                    //     data: {
+                    //         charges: [
+                    //             // {
+                    //             //     _id: "charge1",
+                    //             //     name: "Service Fee",
+                    //             //     type: {
+                    //             //         name: "percentage",
+                    //             //         value: 5
+                    //             //     }
+                    //             // },
+                    //             // {
+                    //             //     _id: "charge2",
+                    //             //     name: "Delivery Fee",
+                    //             //     type: {
+                    //             //         name: "number",
+                    //             //         value: 10
+                    //             //     }
+                    //             // },
+                    //             // {
+                    //             //     _id: "charge3",
+                    //             //     name: "VAT",
+                    //             //     type: {
+                    //             //         name: "percentage",
+                    //             //         value: 5
+                    //             //     }
+                    //             // }
+                    //         ]
+                    //     }
+                    // };
+
+                    renderCharges(data.data.charges);
+                } catch (error) {
+                    console.error('Load Charges Error:', error);
+                    ToastManager.show('Failed to load charges: ' + error.message, 'error');
+                }
+            }
+
+            async function saveCharge(chargeData) {
+                try {
+                    const isEditing = currentEditingCharge !== null;
+                    const url = isEditing ?
+                        `${API_BASE_URL}/charges/${currentEditingCharge}` :
+                        `${API_BASE_URL}/charges`;
+                    const method = isEditing ? 'PUT' : 'POST';
+
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(chargeData)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // const data = {
+                    //     success: true,
+                    //     message: isEditing ? 'Charge updated successfully' : 'Charge created successfully',
+                    //     data: {
+                    //         charge: {
+                    //             _id: currentEditingCharge || 'new_charge_id',
+                    //             ...chargeData
+                    //         }
+                    //     }
+                    // };
+
+                    ToastManager.show(data.message, 'success');
+                    closeModal('chargeModal');
+                    loadCharges();
+                } catch (error) {
+                    console.error('Save Charge Error:', error);
+                    ToastManager.show('Failed to save charge: ' + error.message, 'error');
+                }
+            }
+
+            async function deleteCharge(chargeId) {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    const response = await fetch(`${API_BASE_URL}/charges/${chargeId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+
+                    // MOCK DATA - Replace with actual API call above
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // const data = {
+                    //     success: true,
+                    //     message: 'Charge deleted successfully'
+                    // };
+
+                    ToastManager.show(data.message, 'success');
+                    closeModal('deleteModal');
+                    loadCharges();
+                } catch (error) {
+                    console.error('Delete Charge Error:', error);
+                    ToastManager.show('Failed to delete charge: ' + error.message, 'error');
+                }
+            }
+
+            async function deleteDeliveryCharge(id) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/delivery-charges/${id}`, { method: 'DELETE' });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message);
+
+                    ToastManager.show(data.message, 'success');
+                    closeModal('deleteModal');
+                    loadDeliveryCharges();
+                } catch (error) {
+                    ToastManager.show(error.message, 'error');
+                }
+            }
+
+            async function loadSystemInfo() {
+                try {
+                    // ACTUAL API CALL (currently commented out - using mock data)
+                    // const response = await fetch(`${API_BASE_URL}/system/info`);
+                    // if (!response.ok) {
+                    //     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    // }
+                    // const data = await response.json();
+                    // if (!data.success) {
+                    //     throw new Error(data.message || 'Failed to load system info');
+                    // }
+
+                    // MOCK DATA - Replace with actual API call above
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const data = {
+                        success: true,
+                        data: {
+                            appVersion: "1.2.3",
+                            apiEndpoint: "https://api.igrab.com",
+                            environment: "production",
+                            uptime: "15 days, 4 hours",
+                            lastUpdated: "2023-12-15T10:30:00Z"
+                        }
+                    };
+
+                    renderSystemInfo(data.data);
+                } catch (error) {
+                    console.error('Load System Info Error:', error);
+                    ToastManager.show('Failed to load system information: ' + error.message, 'error');
+                }
+            }
+
+            // Render Functions
+            function renderBranches(branches) {
+                const container = document.getElementById('branchesContainer');
+                if (!branches || branches.length === 0) {
+                    container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-store text-4xl text-gray-400 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">No branches found</h3>
+                        <p class="text-gray-500 mb-4">Start by creating your first branch.</p>
+                        <button onclick="openBranchModal()" class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add First Branch
+                        </button>
+                    </div>
+                `;
+                    return;
+                }
+
+                container.innerHTML = branches.map(branch => `
+                <div class="branch-card bg-white border rounded-lg p-4 mb-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">${branch.name}</h3>
+                                <span class="ml-2 px-2 py-1 text-xs rounded-full ${branch.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${branch.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 mb-2">${branch.address}</p>
+                            <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+                                ${branch.email ? `<span><i class="fas fa-envelope mr-1"></i>${branch.email}</span>` : ''}
+                                ${branch.contactNumber ? `<span><i class="fas fa-phone mr-1"></i>${branch.contactNumber}</span>` : ''}
+                                <span><i class="fas fa-calendar mr-1"></i>${new Date(branch.createdAt).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editBranch('${branch._id}')" class="text-blue-600 hover:text-blue-800 p-2" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="confirmDelete('${branch._id}', 'branch', '${branch.name}')" class="text-red-600 hover:text-red-800 p-2" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            }
+
+            function renderCharges(charges) {
+                const container = document.getElementById('chargesContainer');
+                if (!charges || charges.length === 0) {
+                    container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-money-bill text-4xl text-gray-400 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">No charges found</h3>
+                        <p class="text-gray-500 mb-4">Start by creating your first charge.</p>
+                        <button onclick="openChargeModal()" class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add First Charge
+                        </button>
+                    </div>
+                `;
+                    return;
+                }
+
+                container.innerHTML = charges.map(charge => `
+                <div class="charge-card bg-white border rounded-lg p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">${charge.name}</h3>
+                            <div class="flex items-center space-x-4">
+                                <span class="px-3 py-1 text-sm rounded-full ${charge.type.name === 'percentage' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                    ${charge.type.name === 'percentage' ? 'Percentage' : 'Fixed Amount'}
+                                </span>
+                                <span class="text-lg font-bold text-gray-900">
+                                    ${charge.type.value}${charge.type.name === 'percentage' ? '%' : ' AED'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editCharge('${charge._id}')" class="text-blue-600 hover:text-blue-800 p-2" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="confirmDelete('${charge._id}', 'charge', '${charge.name}')" class="text-red-600 hover:text-red-800 p-2" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            }
+
+            function renderSystemInfo(info) {
+                const container = document.getElementById('systemInfoContainer');
+                container.innerHTML = `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2">Application</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Version:</span>
+                            <span class="font-medium">${info.appVersion}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Environment:</span>
+                            <span class="font-medium capitalize">${info.environment}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Uptime:</span>
+                            <span class="font-medium">${info.uptime}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2">API Information</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Endpoint:</span>
+                            <span class="font-medium">${info.apiEndpoint}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Last Updated:</span>
+                            <span class="font-medium">${new Date(info.lastUpdated).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+
+            // UI Functions
+            function switchTab(tabName) {
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Remove active class from all tab buttons
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.classList.remove('active');
+                });
+
+                // Show selected tab content
+                document.getElementById(tabName).classList.add('active');
+                event.target.classList.add('active');
+
+                // Load data for the selected tab
+                switch (tabName) {
+                    case 'business':
+                        loadBusinessInfo();
+                        break;
+                    case 'branches':
+                        loadBranches();
+                        break;
+                    case 'payment':
+                        loadPaymentSettings();
+                        break;
+                    case 'seo':
+                        loadSeoSettings();
+                        break;
+                        break;
+                    case 'charges':
+                        loadCharges();
+                        break;
+                    case 'delivery-charges':
+                        loadDeliveryCharges();
+                        break;
+                    case 'system':
+                        // loadSystemInfo();
+                        break;
+                }
+            }
+
+            function openModal(modalId) {
+                document.getElementById(modalId).classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).classList.remove('show');
+                document.body.style.overflow = 'auto';
+
+                // Reset forms
+                if (modalId === 'branchModal') {
+                    document.getElementById('branchForm').reset();
+                    currentEditingBranch = null;
+                    document.getElementById('chargeForm').reset();
+                    currentEditingCharge = null;
+                } else if (modalId === 'deliveryChargeModal') {
+                    document.getElementById('deliveryChargeForm').reset();
+                    currentEditingDeliveryCharge = null;
+                    toggleDeliveryChargeInputs(); // Reset UI state
+                }
+            }
+
+            function openBranchModal() {
+                currentEditingBranch = null;
+                document.getElementById('branchModalTitle').textContent = 'Add New Branch';
+                document.getElementById('branchForm').reset();
+                openModal('branchModal');
+            }
+
+            async function editBranch(branchId) {
+                currentEditingBranch = branchId;
+                document.getElementById('branchModalTitle').textContent = 'Edit Branch';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/branches`);
+                    const data = await response.json();
+                    if (data.success) {
+                        const branch = data.data.branches.find(b => b._id === branchId);
+                        if (branch) {
+                            document.getElementById('branchName').value = branch.name || '';
+                            document.getElementById('branchEmail').value = branch.email || '';
+                            document.getElementById('branchAddress').value = branch.address || '';
+                            document.getElementById('branchContactNumber').value = branch.phone || ''; // Matches 'phone' from formatted output
+
+                            if (branch.location && branch.location.coordinates) {
+                                document.getElementById('branchLat').value = branch.location.coordinates[1];
+                                document.getElementById('branchLng').value = branch.location.coordinates[0];
+                                selectedBranchLocation = {
+                                    lat: branch.location.coordinates[1],
+                                    lng: branch.location.coordinates[0]
+                                };
+                            } else {
+                                document.getElementById('branchLat').value = '';
+                                document.getElementById('branchLng').value = '';
+                                selectedBranchLocation = null;
+                            }
+                            openModal('branchModal');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fetch Branch Error:', error);
+                    ToastManager.show('Failed to fetch branch details', 'error');
+                }
+            }
+
+            function openChargeModal() {
+                currentEditingCharge = null;
+                document.getElementById('chargeModalTitle').textContent = 'Add New Charge';
+                document.getElementById('chargeForm').reset();
+                openModal('chargeModal');
+            }
+
+            async function editCharge(chargeId) {
+                currentEditingCharge = chargeId;
+                document.getElementById('chargeModalTitle').textContent = 'Edit Charge';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/charges`);
+                    const data = await response.json();
+                    if (data.success) {
+                        const charge = data.data.charges.find(c => c._id === chargeId);
+                        if (charge) {
+                            document.getElementById('chargeName').value = charge.name || '';
+                            document.getElementById('chargeType').value = charge.type.name || '';
+                            document.getElementById('chargeValue').value = charge.type.value || '';
+                            openModal('chargeModal');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fetch Charge Error:', error);
+                    ToastManager.show('Failed to fetch charge details', 'error');
+                }
+            }
+
+            function confirmDelete(itemId, type, name) {
+                currentDeleteItem = itemId;
+                currentDeleteType = type;
+                document.getElementById('deleteModal').querySelector('h4').textContent = `Are you sure you want to delete "${name}"?`;
+                openModal('deleteModal');
+            }
+
+            // File Upload Functions
+            function setupFileUpload(inputId, uploadAreaId, previewId, placeholderId, uploadFunction) {
+                const input = document.getElementById(inputId);
+                const uploadArea = document.getElementById(uploadAreaId);
+                const preview = document.getElementById(previewId);
+                const placeholder = document.getElementById(placeholderId);
+
+                uploadArea.addEventListener('click', () => input.click());
+
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFileUpload(files[0], uploadFunction);
+                    }
+                });
+
+                input.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        handleFileUpload(e.target.files[0], uploadFunction);
+                    }
+                });
+            }
+
+            async function handleFileUpload(file, uploadFunction) {
+                if (!file.type.startsWith('image/')) {
+                    ToastManager.show('Please select an image file', 'error');
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) { // 5MB
+                    ToastManager.show('File size must be less than 5MB', 'error');
+                    return;
+                }
+
+                try {
+                    const imageUrl = await uploadFunction(file);
+                    return imageUrl;
+                } catch (error) {
+                    ToastManager.show('Failed to upload image: ' + error.message, 'error');
+                }
+            }
+
+            function showLogoPreview(imageUrl) {
+                document.getElementById('logoUploadPlaceholder').style.display = 'none';
+                document.getElementById('logoPreview').classList.remove('hidden');
+                document.getElementById('logoImage').src = imageUrl;
+            }
+
+            function removeLogo() {
+                document.getElementById('logoUploadPlaceholder').style.display = 'block';
+                document.getElementById('logoPreview').classList.add('hidden');
+                document.getElementById('logoImage').src = '';
+            }
+
+            function removeFavicon() {
+                document.getElementById('faviconUploadPlaceholder').style.display = 'block';
+                document.getElementById('faviconPreview').classList.add('hidden');
+                document.getElementById('faviconImage').src = '';
+            }
+
+            function removeOgImage() {
+                document.getElementById('ogImageUploadPlaceholder').style.display = 'block';
+                document.getElementById('ogImagePreview').classList.add('hidden');
+                document.getElementById('ogImageImage').src = '';
+            }
+
+            function toggleDeliveryChargeInputs() {
+                const chargeType = document.querySelector('input[name="chargeType"]:checked').value;
+                const fixedInput = document.getElementById('fixedChargeInput');
+                const distanceInput = document.getElementById('distanceChargeInput');
+
+                if (chargeType === 'fixed') {
+                    fixedInput.classList.remove('hidden');
+                    distanceInput.classList.add('hidden');
+                    document.getElementById('dcFixedRate').required = true;
+                    document.getElementById('dcBaseDistance').required = false;
+                    document.getElementById('dcBaseCost').required = false;
+                    document.getElementById('dcExtraCost').required = false;
+                } else {
+                    fixedInput.classList.add('hidden');
+                    distanceInput.classList.remove('hidden');
+                    document.getElementById('dcFixedRate').required = false;
+                    document.getElementById('dcBaseDistance').required = true;
+                    document.getElementById('dcBaseCost').required = true;
+                    document.getElementById('dcExtraCost').required = true;
+                }
+            }
+
+            function openDeliveryChargeModal() {
+                currentEditingDeliveryCharge = null;
+                document.getElementById('deliveryChargeModalTitle').textContent = 'Add Delivery Charge (UAE)';
+                document.getElementById('deliveryChargeForm').reset();
+                toggleDeliveryChargeInputs();
+                openModal('deliveryChargeModal');
+            }
+
+            async function loadDeliveryCharges() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/delivery-charges`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        renderDeliveryCharges(data.data.charges);
+                    }
+                } catch (error) {
+                    console.error('Load Delivery Charges Error:', error);
+                    ToastManager.show('Failed to load delivery charges', 'error');
+                }
+            }
+
+            function renderDeliveryCharges(charges) {
+                const container = document.getElementById('deliveryChargesContainer');
+
+                if (!charges || charges.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-truck text-4xl text-gray-400 mb-4"></i>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-2">No delivery charges configured</h3>
+                            <button onclick="openDeliveryChargeModal()" class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
+                                <i class="fas fa-plus mr-2"></i>Add First Charge
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = charges.map(charge => `
+                    <div class="charge-card bg-white border rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    <h3 class="text-lg font-semibold text-gray-900 mr-3">${charge.emirate}</h3>
+                                    <span class="px-2 py-1 text-xs rounded-full ${charge.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                        ${charge.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                    <span class="font-medium bg-gray-100 px-2 py-1 rounded">
+                                        ${charge.chargeType === 'fixed' ? 'Fixed Rate' : 'Distance Based'}
+                                    </span>
+                                    ${charge.chargeType === 'fixed'
+                        ? `<span class="font-bold text-gray-900">${charge.fixedCharge} AED</span>`
+                        : `<span>Base: ${charge.distanceCharge.baseCost} AED (${charge.distanceCharge.baseDistance}km) + ${charge.distanceCharge.extraCostPerKm} AED/km</span>`
+                    }
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="editDeliveryCharge('${charge._id}')" class="text-blue-600 hover:text-blue-800 p-2" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="confirmDelete('${charge._id}', 'delivery-charge', '${charge.emirate}')" class="text-red-600 hover:text-red-800 p-2" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async function saveDeliveryCharge(chargeData) {
+                try {
+                    const isEditing = currentEditingDeliveryCharge !== null;
+                    const url = isEditing ?
+                        `${API_BASE_URL}/delivery-charges/${currentEditingDeliveryCharge}` :
+                        `${API_BASE_URL}/delivery-charges`;
+
+                    const method = isEditing ? 'PUT' : 'POST';
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(chargeData)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) throw new Error(data.message || 'Failed to save');
+
+                    ToastManager.show(data.message, 'success');
+                    closeModal('deliveryChargeModal');
+                    loadDeliveryCharges();
+                } catch (error) {
+                    console.error('Save Delivery Charge Error:', error);
+                    ToastManager.show(error.message, 'error');
+                }
+            }
+
+            async function editDeliveryCharge(id) {
+                currentEditingDeliveryCharge = id;
+                document.getElementById('deliveryChargeModalTitle').textContent = 'Edit Delivery Charge';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/delivery-charges`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const charge = data.data.charges.find(c => c._id === id);
+                        if (charge) {
+                            document.getElementById('dcEmirate').value = charge.emirate;
+
+                            // Set radio button
+                            const radio = document.querySelector(`input[name="chargeType"][value="${charge.chargeType}"]`);
+                            if (radio) radio.checked = true;
+
+                            toggleDeliveryChargeInputs();
+
+                            if (charge.chargeType === 'fixed') {
+                                document.getElementById('dcFixedRate').value = charge.fixedCharge;
+                            } else {
+                                document.getElementById('dcBaseDistance').value = charge.distanceCharge.baseDistance;
+                                document.getElementById('dcBaseCost').value = charge.distanceCharge.baseCost;
+                                document.getElementById('dcExtraCost').value = charge.distanceCharge.extraCostPerKm;
+                            }
+
+                            openModal('deliveryChargeModal');
+                        }
+                    }
+                } catch (error) {
+                    ToastManager.show('Failed to fetch details', 'error');
+                }
+            }
+
+            // Initialize page
+            document.addEventListener('DOMContentLoaded', function () {
+                // Load initial data
+                loadBusinessInfo();
+
+                // Setup file uploads
+                setupFileUpload('logoInput', 'logoUploadArea', 'logoPreview', 'logoUploadPlaceholder', uploadLogo);
+                setupFileUpload('faviconInput', 'faviconUploadArea', 'faviconPreview', 'faviconUploadPlaceholder', uploadLogo);
+                setupFileUpload('ogImageInput', 'ogImageUploadArea', 'ogImagePreview', 'ogImageUploadPlaceholder', uploadLogo);
+
+                // Event listeners
+                document.getElementById('backBtn').addEventListener('click', () => window.history.back());
+                document.getElementById('addBranchBtn').addEventListener('click', openBranchModal);
+                document.getElementById('addChargeBtn').addEventListener('click', openChargeModal);
+
+                // Save buttons
+                document.getElementById('saveBusinessBtn').addEventListener('click', saveBusinessInfo);
+                document.getElementById('savePaymentBtn').addEventListener('click', savePaymentSettings);
+                document.getElementById('saveSeoBtn').addEventListener('click', saveSeoSettings);
+
+                // Stripe toggle validation
+                document.getElementById('stripeToggle').addEventListener('change', function () {
+                    if (this.checked) {
+                        const publishableKey = document.getElementById('stripePublishableKey').value.trim();
+                        const secretKey = document.getElementById('stripeSecretKey').value.trim();
+                        if (!publishableKey || !secretKey) {
+                            ToastManager.show('Please provide Stripe Publishable and Secret keys before enabling Stripe payment.', 'warning');
+                            this.checked = false;
+                        }
+                    }
+                });
+
+                // Form submissions
+                document.getElementById('branchForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const branchData = {
+                        name: document.getElementById('branchName').value.trim(),
+                        email: document.getElementById('branchEmail').value.trim(),
+                        address: document.getElementById('branchAddress').value.trim(),
+                        contactNumber: document.getElementById('branchContactNumber').value.trim(),
+                        latitude: document.getElementById('branchLat').value,
+                        longitude: document.getElementById('branchLng').value
+                    };
+                    saveBranch(branchData);
+                });
+
+                document.getElementById('chargeForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const chargeData = {
+                        name: document.getElementById('chargeName').value.trim(),
+                        type: {
+                            name: document.getElementById('chargeType').value,
+                            value: parseFloat(document.getElementById('chargeValue').value)
+                        }
+                    };
+                    saveCharge(chargeData);
+                });
+
+                // Delete confirmation
+                document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                    if (currentDeleteItem && currentDeleteType) {
+                        if (currentDeleteType === 'branch') {
+                            deleteBranch(currentDeleteItem);
+                        } else if (currentDeleteType === 'charge') {
+                            deleteCharge(currentDeleteItem);
+                        } else if (currentDeleteType === 'delivery-charge') {
+                            deleteDeliveryCharge(currentDeleteItem);
+                        }
+                    }
+                });
+
+                document.getElementById('deliveryChargeForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    const chargeType = document.querySelector('input[name="chargeType"]:checked').value;
+                    const data = {
+                        emirate: document.getElementById('dcEmirate').value,
+                        chargeType: chargeType,
+                        isActive: true
+                    };
+
+                    if (chargeType === 'fixed') {
+                        data.fixedCharge = parseFloat(document.getElementById('dcFixedRate').value);
+                    } else {
+                        data.distanceCharge = {
+                            baseDistance: parseFloat(document.getElementById('dcBaseDistance').value),
+                            baseCost: parseFloat(document.getElementById('dcBaseCost').value),
+                            extraCostPerKm: parseFloat(document.getElementById('dcExtraCost').value)
+                        };
+                    }
+
+                    saveDeliveryCharge(data);
+                });
+                // Modal close on backdrop click
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', function (e) {
+                        if (e.target === this) {
+                            closeModal(this.id);
+                        }
+                    });
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        const openModal = document.querySelector('.modal.show');
+                        if (openModal) {
+                            closeModal(openModal.id);
+                        }
+                    }
+                });
+            });
+
+            // Global functions for inline event handlers
+            window.switchTab = switchTab;
+            window.openBranchModal = openBranchModal;
+            window.editBranch = editBranch;
+            window.openChargeModal = openChargeModal;
+            window.editCharge = editCharge;
+            window.confirmDelete = confirmDelete;
+            window.closeModal = closeModal;
+            window.removeLogo = removeLogo;
+            window.removeFavicon = removeFavicon;
+            window.removeOgImage = removeOgImage;
+        </script>
+        <script
+            src="https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&libraries=places&callback=initBranchMap"
+            async defer></script>
+        <%- include('../../partials/Footer') %>

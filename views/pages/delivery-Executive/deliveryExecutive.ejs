@@ -1,0 +1,1442 @@
+<%- include('../../partials/Header') %>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iGrab Cafe - Delivery Executive Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-100">
+    <style>
+        .brand-teal {
+            background-color: #1E7065;
+        }
+
+        .brand-teal-light {
+            background-color: #2F8A7B;
+        }
+
+        .brand-orange {
+            background-color: #F59E0B;
+        }
+
+        .text-brand-teal {
+            color: #1E7065;
+        }
+
+        .border-brand-teal {
+            border-color: #1E7065;
+        }
+
+        .hover-brand-teal:hover {
+            background-color: #1E7065;
+        }
+
+        .executive-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .executive-card:hover {
+            border-left-color: #1E7065;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-active {
+            background-color: #10B981;
+            color: white;
+        }
+
+        .status-inactive {
+            background-color: #EF4444;
+            color: white;
+        }
+
+        .branch-badge {
+            background-color: #E5E7EB;
+            color: #374151;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            margin: 0.125rem;
+            display: inline-block;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1E7065;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-state {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+
+        .empty-state {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .branch-selector {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .branch-selector.has-selection {
+            border-color: #1E7065;
+            background-color: #f0f9f7;
+        }
+
+        .branch-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .branch-card:hover {
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+        }
+
+        .branch-card.selected {
+            border-color: #1E7065;
+            background-color: #f0f9f7;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background-color: #10b981;
+        }
+
+        .toast.error {
+            background-color: #ef4444;
+        }
+
+        .toast.warning {
+            background-color: #f59e0b;
+        }
+
+        .status-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .status-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .status-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .status-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .status-slider {
+            background-color: #1E7065;
+        }
+
+        input:checked + .status-slider:before {
+            transform: translateX(26px);
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10px;
+                padding: 16px;
+            }
+
+            .branch-card {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+
+    <!-- Header Section -->
+    <header class="brand-teal text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap justify-between items-center h-16">
+                <div class="flex items-center">
+                    <button id="backBtn" class="mr-4 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="text-xl font-bold">Delivery Executive Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- <span class="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                        <i class="fas fa-crown mr-1"></i>Super Admin
+                    </span> -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header Section -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Delivery Executives</h1>
+                    <p class="text-gray-600">Manage delivery executives and their branch assignments</p>
+                </div>
+                <button id="addExecutiveBtn" class="brand-teal hover:brand-teal-light text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 mt-4 sm:mt-0">
+                    <i class="fas fa-user-plus mr-2"></i>Add New Executive
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6" id="statsCards">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden bg-white rounded-lg shadow-sm border p-8">
+            <div class="flex flex-col items-center justify-center">
+                <div class="loading-spinner mb-4"></div>
+                <p class="text-gray-600">Loading delivery executives...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden error-state rounded-lg border p-8">
+            <div class="flex flex-col items-center justify-center text-center">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                <h3 class="text-lg font-semibold text-red-800 mb-2">Something went wrong</h3>
+                <p class="text-red-600 mb-4" id="errorMessage">Failed to load delivery executives. Please try again.</p>
+                <button id="retryBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Retry
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden empty-state rounded-lg border p-8">
+            <div class="flex flex-col items-center justify-center text-center">
+                <i class="fas fa-motorcycle text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">No delivery executives found</h3>
+                <p class="text-gray-500 mb-4">Start by creating your first delivery executive.</p>
+                <button id="createFirstExecutiveBtn" class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-user-plus mr-2"></i>Create First Executive
+                </button>
+            </div>
+        </div>
+
+        <!-- Delivery Executives Grid/Table -->
+        <div id="executivesContainer" class="bg-white rounded-lg shadow-sm border">
+            <!-- Desktop Table View -->
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="text-left p-4 font-semibold text-gray-900">Executive Details</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Contact Info</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Assigned Branches</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Status</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Created</th>
+                            <th class="text-left p-4 font-semibold text-gray-900">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="executivesTableBody">
+                        <!-- Delivery executives will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="lg:hidden" id="executivesMobileView">
+                <!-- Delivery executives will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between" id="paginationContainer">
+            <div class="text-sm text-gray-700 mb-4 sm:mb-0" id="paginationInfo">
+                <!-- Pagination info will be populated -->
+            </div>
+            <div class="flex items-center space-x-2" id="paginationButtons">
+                <!-- Pagination buttons will be populated -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Executive Modal -->
+    <div id="executiveModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900" id="modalTitle">Add New Delivery Executive</h3>
+                <button type="button" class="text-gray-500 hover:text-gray-700 p-2" onclick="closeModal('executiveModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="executiveForm">
+                <div class="space-y-6">
+                    <!-- Basic Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                            <input type="text" id="executiveName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="Enter full name">
+                            <div class="error-message text-red-600 text-xs mt-1" id="nameError"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                            <input type="tel" id="executivePhone" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                placeholder="+971 50 123 4567">
+                            <div class="error-message text-red-600 text-xs mt-1" id="phoneError"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                        <input type="email" id="executiveEmail" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            placeholder="executive@igrab.com">
+                        <div class="error-message text-red-600 text-xs mt-1" id="emailError"></div>
+                    </div>
+
+                    <!-- Branch Assignment -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Assign Branches *</label>
+                        <div class="branch-selector" id="branchSelector">
+                            <div class="text-center text-gray-500 mb-4" id="branchSelectorPlaceholder">
+                                <i class="fas fa-store text-2xl mb-2"></i>
+                                <p>Select branches for this delivery executive</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="branchesContainer">
+                                <!-- Branches will be populated here -->
+                            </div>
+                        </div>
+                        <div class="error-message text-red-600 text-xs mt-1" id="branchError"></div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Active Status</h4>
+                            <p class="text-sm text-gray-600">Enable or disable delivery executive access</p>
+                        </div>
+                        <label class="status-toggle">
+                            <input type="checkbox" id="executiveStatus" checked>
+                            <span class="status-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="closeModal('executiveModal')"
+                            class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-3 brand-teal text-white rounded-lg hover:brand-teal-light transition-colors">
+                            <span class="btn-text">Create Executive</span>
+                            <span class="btn-loading hidden">
+                                <div class="loading-spinner"></div>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-red-800">Delete Delivery Executive</h3>
+                <button type="button" class="text-gray-500 hover:text-gray-700 p-2" onclick="closeModal('deleteModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3 p-4 bg-red-50 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                    <div>
+                        <h4 class="font-semibold text-red-800">Are you sure?</h4>
+                        <p class="text-sm text-red-700">This action cannot be undone. The executive will lose access immediately.</p>
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-700 mb-2">Executive details:</p>
+                    <div id="deleteExecutiveDetails" class="text-sm font-medium text-gray-900">
+                        <!-- Executive details will be populated -->
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('deleteModal')"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmDeleteBtn"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <span class="btn-text">Delete Executive</span>
+                        <span class="btn-loading hidden">
+                            <div class="loading-spinner"></div>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // API Configuration and State Management
+        const API_BASE_URL = '/api';
+        let currentPage = 1;
+        let executives = [];
+        let branches = [];
+        let selectedBranches = [];
+        let editingExecutiveId = null;
+
+        // Delivery Executive API Class
+        class DeliveryExecutiveAPI {
+            static async fetchExecutives(params = {}) {
+                try {
+                //    ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const queryParams = new URLSearchParams({
+                        page: params.page || currentPage,
+                        limit: params.limit || 10
+                    });
+
+                    const response = await fetch(`${API_BASE_URL}/delivery-executives?${queryParams}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': `Bearer ${authToken}` // if needed
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.message || 'API returned unsuccessful response');
+                    }
+
+                    return data;
+                    
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+                    // return await simulateExecutiveAPICall();
+                } catch (error) {
+                    console.error('Fetch Delivery Executives Error:', error);
+                    throw error;
+                }
+            }
+
+            static async fetchBranches() {
+                try {
+                    //  ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const response = await fetch(`${API_BASE_URL}/branches/available`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': `Bearer ${authToken}` // if needed
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to fetch branches');
+                    }
+
+                    return data;
+                    
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // return await simulateBranchAPICall();
+                } catch (error) {
+                    console.error('Fetch Branches Error:', error);
+                    throw error;
+                }
+            }
+
+            static async createExecutive(executiveData) {
+                try {
+                    //  ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const response = await fetch(`${API_BASE_URL}/delivery-executives`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': `Bearer ${authToken}` // if needed
+                        },
+                        body: JSON.stringify(executiveData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+                    
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    // await new Promise(resolve => setTimeout(resolve, 1500));
+                    // return {
+                    //     success: true,
+                    //     message: "Delivery executive created successfully",
+                    //     data: {
+                    //         deliveryExecutive: {
+                    //             _id: "exec" + Date.now(),
+                    //             ...executiveData,
+                    //             createdAt: new Date().toISOString()
+                    //         }
+                    //     }
+                    // };
+                } catch (error) {
+                    console.error('Create Delivery Executive Error:', error);
+                    throw error;
+                }
+            }
+
+            static async updateExecutive(executiveId, executiveData) {
+                try {
+                    //  ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const response = await fetch(`${API_BASE_URL}/delivery-executives/${executiveId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': `Bearer ${authToken}` // if needed
+                        },
+                        body: JSON.stringify(executiveData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+                    
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    // await new Promise(resolve => setTimeout(resolve, 1500));
+                    // return {
+                    //     success: true,
+                    //     message: "Delivery executive updated successfully",
+                    //     data: {
+                    //         deliveryExecutive: {
+                    //             _id: executiveId,
+                    //             ...executiveData
+                    //         }
+                    //     }
+                    // };
+                } catch (error) {
+                    console.error('Update Delivery Executive Error:', error);
+                    throw error;
+                }
+            }
+
+            static async deleteExecutive(executiveId) {
+                try {
+                    //  ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const response = await fetch(`${API_BASE_URL}/delivery-executives/${executiveId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': `Bearer ${authToken}` // if needed
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+                
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    // await new Promise(resolve => setTimeout(resolve, 1500));
+                    // return {
+                    //     success: true,
+                    //     message: "Delivery executive deleted successfully"
+                    // };
+                } catch (error) {
+                    console.error('Delete Delivery Executive Error:', error);
+                    throw error;
+                }
+            }
+
+            static async toggleExecutiveStatus(executiveId, isActive) {
+                try {
+                    //  ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const response = await fetch(`${API_BASE_URL}/delivery-executives/${executiveId}/status`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': `Bearer ${authToken}` // if needed
+                        },
+                        body: JSON.stringify({ isActive })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+                    
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // return {
+                    //     success: true,
+                    //     message: `Delivery executive ${isActive ? 'activated' : 'deactivated'} successfully`
+                    // };
+                } catch (error) {
+                    console.error('Toggle Executive Status Error:', error);
+                    throw error;
+                }
+            }
+
+            static async checkEmailAvailability(email, excludeId = null) {
+                try {
+                    /* ACTUAL API CALL - UNCOMMENT WHEN BACKEND IS READY
+                    const queryParams = new URLSearchParams({ email });
+                    if (excludeId) {
+                        queryParams.append('excludeId', excludeId);
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/delivery-executives/check-email?${queryParams}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}` // if needed
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+                    */
+
+                    // MOCK DATA - REMOVE WHEN BACKEND IS READY
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    return {
+                        success: true,
+                        available: true
+                    };
+                } catch (error) {
+                    console.error('Check Email Error:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(message, type = 'success', duration = 3000) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'} mr-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+
+                document.getElementById('toastContainer').appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        }
+
+        // UI State Management
+        class UIManager {
+            static showLoading() {
+                document.getElementById('loadingState').classList.remove('hidden');
+                document.getElementById('executivesContainer').classList.add('hidden');
+                document.getElementById('errorState').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+            }
+
+            static showError(message = 'Something went wrong') {
+                document.getElementById('errorMessage').textContent = message;
+                document.getElementById('errorState').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('executivesContainer').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+            }
+
+            static showEmpty() {
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('executivesContainer').classList.add('hidden');
+                document.getElementById('errorState').classList.add('hidden');
+            }
+
+            static showExecutives() {
+                document.getElementById('executivesContainer').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.add('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+            }
+        }
+
+        // Template Rendering
+        class TemplateRenderer {
+            static renderStatsCards(stats) {
+                const statsContainer = document.getElementById('statsCards');
+                statsContainer.innerHTML = `
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="brand-teal text-white p-3 rounded-lg">
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Total Executives</p>
+                                <p class="text-xl font-bold">${stats.totalExecutives || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="bg-green-500 text-white p-3 rounded-lg">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Active</p>
+                                <p class="text-xl font-bold">${stats.activeExecutives || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+                        <div class="flex items-center">
+                            <div class="bg-red-500 text-white p-3 rounded-lg">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Inactive</p>
+                                <p class="text-xl font-bold">${stats.inactiveExecutives || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            static renderDesktopTable(executives) {
+                const tbody = document.getElementById('executivesTableBody');
+                tbody.innerHTML = '';
+
+                executives.forEach(executive => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-gray-50 transition-colors fade-in';
+
+                    const branchBadges = executive.assignedBranches?.map(branch => 
+                        `<span class="branch-badge">${branch.name}</span>`
+                    ).join('') || '<span class="text-gray-500 text-sm">No branches assigned</span>';
+
+                    row.innerHTML = `
+                        <td class="p-4">
+                            <div class="flex items-center">
+                                <div class="brand-teal text-white p-2 rounded-full mr-3">
+                                    <i class="fas fa-motorcycle"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">${executive.name}</div>
+                                    <div class="text-sm text-gray-500">ID: ${executive._id.substring(0, 8)}...</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-sm">
+                                <div class="font-medium text-gray-900">${executive.email}</div>
+                                <div class="text-gray-500">${executive.phone}</div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <div class="max-w-xs">
+                                ${branchBadges}
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <label class="status-toggle" title="Toggle executive status">
+                                <input type="checkbox" ${executive.isActive ? 'checked' : ''} 
+                                       onchange="toggleExecutiveStatus('${executive._id}', this.checked)">
+                                <span class="status-slider"></span>
+                            </label>
+                        </td>
+                        <td class="p-4 text-sm text-gray-600">
+                            ${new Date(executive.createdAt).toLocaleDateString()}
+                        </td>
+                        <td class="p-4">
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800 p-1" title="Edit" 
+                                        onclick="editExecutive('${executive._id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800 p-1" title="Delete" 
+                                        onclick="confirmDeleteExecutive('${executive._id}', '${executive.name}', '${executive.email}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+
+                    tbody.appendChild(row);
+                });
+            }
+
+            static renderMobileCards(executives) {
+                const container = document.getElementById('executivesMobileView');
+                container.innerHTML = '';
+
+                executives.forEach(executive => {
+                    const card = document.createElement('div');
+                    card.className = 'executive-card p-4 border-b fade-in';
+
+                    const branchBadges = executive.assignedBranches?.map(branch => 
+                        `<span class="branch-badge">${branch.name}</span>`
+                    ).join('') || '<span class="text-gray-500 text-sm">No branches assigned</span>';
+
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="brand-teal text-white p-2 rounded-full mr-3">
+                                    <i class="fas fa-motorcycle"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">${executive.name}</h3>
+                                    <p class="text-sm text-gray-500">${executive.email}</p>
+                                </div>
+                            </div>
+                            <label class="status-toggle" title="Toggle executive status">
+                                <input type="checkbox" ${executive.isActive ? 'checked' : ''} 
+                                       onchange="toggleExecutiveStatus('${executive._id}', this.checked)">
+                                <span class="status-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 gap-3 mb-3">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Phone</p>
+                                <p class="font-medium">${executive.phone}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Assigned Branches</p>
+                                <div>${branchBadges}</div>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Created</p>
+                                <p class="text-sm">${new Date(executive.createdAt).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800 px-3 py-1 text-sm font-medium" 
+                                    onclick="editExecutive('${executive._id}')">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button class="text-red-600 hover:text-red-800 px-3 py-1 text-sm font-medium" 
+                                    onclick="confirmDeleteExecutive('${executive._id}', '${executive.name}', '${executive.email}')">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+            }
+
+            static renderPagination(pagination) {
+                const infoContainer = document.getElementById('paginationInfo');
+                const buttonsContainer = document.getElementById('paginationButtons');
+
+                const start = (pagination.currentPage - 1) * 10 + 1;
+                const end = Math.min(pagination.currentPage * 10, pagination.totalExecutives);
+                infoContainer.innerHTML = `
+                    Showing <span class="font-medium">${start}</span> to <span class="font-medium">${end}</span> 
+                    of <span class="font-medium">${pagination.totalExecutives}</span> delivery executives
+                `;
+
+                buttonsContainer.innerHTML = '';
+
+                // Previous button
+                const prevBtn = document.createElement('button');
+                prevBtn.className = `px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ${!pagination.hasPrev ? 'disabled:opacity-50 disabled:cursor-not-allowed' : ''}`;
+                prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prevBtn.disabled = !pagination.hasPrev;
+                prevBtn.onclick = () => pagination.hasPrev && changePage(pagination.currentPage - 1);
+                buttonsContainer.appendChild(prevBtn);
+
+                // Page numbers
+                const startPage = Math.max(1, pagination.currentPage - 2);
+                const endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `px-3 py-2 text-sm rounded-lg transition-colors ${i === pagination.currentPage ? 'bg-teal-600 text-white' : 'border border-gray-300 hover:bg-gray-50'}`;
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => changePage(i);
+                    buttonsContainer.appendChild(pageBtn);
+                }
+
+                // Next button
+                const nextBtn = document.createElement('button');
+                nextBtn.className = `px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ${!pagination.hasNext ? 'disabled:opacity-50 disabled:cursor-not-allowed' : ''}`;
+                nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                nextBtn.disabled = !pagination.hasNext;
+                nextBtn.onclick = () => pagination.hasNext && changePage(pagination.currentPage + 1);
+                buttonsContainer.appendChild(nextBtn);
+            }
+
+            static renderBranches(branches, selectedBranches = []) {
+                const container = document.getElementById('branchesContainer');
+                const placeholder = document.getElementById('branchSelectorPlaceholder');
+                const selector = document.getElementById('branchSelector');
+
+                container.innerHTML = '';
+
+                if (selectedBranches.length > 0) {
+                    placeholder.style.display = 'none';
+                    selector.classList.add('has-selection');
+                } else {
+                    placeholder.style.display = 'block';
+                    selector.classList.remove('has-selection');
+                }
+
+                branches.forEach(branch => {
+                    const isSelected = selectedBranches.includes(branch._id);
+                    const branchCard = document.createElement('div');
+                    branchCard.className = `branch-card ${isSelected ? 'selected' : ''}`;
+                    branchCard.onclick = () => toggleBranchSelection(branch._id);
+
+                    branchCard.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900 text-sm">${branch.name}</h4>
+                                <p class="text-xs text-gray-600 mt-1">${branch.address}</p>
+                            </div>
+                            <div class="ml-2">
+                                <i class="fas fa-${isSelected ? 'check-circle text-teal-600' : 'circle text-gray-400'}"></i>
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(branchCard);
+                });
+            }
+        }
+
+        // Mock API calls for demo (replace with actual API calls)
+        async function simulateExecutiveAPICall() {
+            const mockExecutives = [
+                {
+                    _id: "exec123",
+                    name: "Ahmed Ali",
+                    email: "ahmed.delivery@igrab.com",
+                    phone: "+971501234567",
+                    isActive: true,
+                    assignedBranches: [
+                        { _id: "branch1", name: "Downtown Dubai Branch", address: "Sheikh Zayed Road, Downtown Dubai" },
+                        { _id: "branch2", name: "Marina Mall Branch", address: "Dubai Marina Mall, Dubai Marina" }
+                    ],
+                    createdAt: "2023-11-15T09:20:00Z"
+                },
+                {
+                    _id: "exec124",
+                    name: "Mohammed Hassan",
+                    email: "mohammed.delivery@igrab.com",
+                    phone: "+971507654321",
+                    isActive: true,
+                    assignedBranches: [
+                        { _id: "branch3", name: "Mall of Emirates", address: "Mall of Emirates, Al Barsha" }
+                    ],
+                    createdAt: "2023-12-01T14:30:00Z"
+                },
+                {
+                    _id: "exec125",
+                    name: "Omar Khalid",
+                    email: "omar.delivery@igrab.com",
+                    phone: "+971509876543",
+                    isActive: false,
+                    assignedBranches: [],
+                    createdAt: "2023-12-10T11:45:00Z"
+                }
+            ];
+
+            return {
+                success: true,
+                data: {
+                    deliveryExecutives: mockExecutives,
+                    pagination: {
+                        currentPage: 1,
+                        totalPages: 1,
+                        totalExecutives: mockExecutives.length,
+                        limit: 10,
+                        hasNext: false,
+                        hasPrev: false
+                    },
+                    stats: {
+                        totalExecutives: mockExecutives.length,
+                        activeExecutives: mockExecutives.filter(e => e.isActive).length,
+                        inactiveExecutives: mockExecutives.filter(e => !e.isActive).length
+                    }
+                }
+            };
+        }
+
+        async function simulateBranchAPICall() {
+            return {
+                success: true,
+                data: {
+                    branches: [
+                        { _id: "branch1", name: "Downtown Dubai Branch", address: "Sheikh Zayed Road, Downtown Dubai", isActive: true },
+                        { _id: "branch2", name: "Marina Mall Branch", address: "Dubai Marina Mall, Dubai Marina", isActive: true },
+                        { _id: "branch3", name: "Mall of Emirates", address: "Mall of Emirates, Al Barsha", isActive: true },
+                        { _id: "branch4", name: "Dubai Hills Branch", address: "Dubai Hills Mall, Dubai Hills", isActive: true }
+                    ]
+                }
+            };
+        }
+
+        // Main Functions
+        async function loadExecutives() {
+            UIManager.showLoading();
+            try {
+                const response = await DeliveryExecutiveAPI.fetchExecutives();
+                console.log('Delivery Executives Loaded:', response);
+                if (response.data.deliveryExecutives.length === 0) {
+                    UIManager.showEmpty();
+                    return;
+                }
+
+                executives = response.data.deliveryExecutives;
+                UIManager.showExecutives();
+                TemplateRenderer.renderStatsCards(response.data.stats);
+                TemplateRenderer.renderDesktopTable(response.data.deliveryExecutives);
+                TemplateRenderer.renderMobileCards(response.data.deliveryExecutives);
+                TemplateRenderer.renderPagination(response.data.pagination);
+
+            } catch (error) {
+                console.error('Load Delivery Executives Error:', error);
+                UIManager.showError(error.message || 'Failed to load delivery executives');
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const response = await DeliveryExecutiveAPI.fetchBranches();
+                branches = response.data.branches;
+            } catch (error) {
+                console.error('Load Branches Error:', error);
+                ToastManager.show('Failed to load branches', 'error');
+            }
+        }
+
+        // Form Functions
+        function toggleBranchSelection(branchId) {
+            if (selectedBranches.includes(branchId)) {
+                selectedBranches = selectedBranches.filter(id => id !== branchId);
+            } else {
+                selectedBranches.push(branchId);
+            }
+            TemplateRenderer.renderBranches(branches, selectedBranches);
+            clearError('branch');
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Clear previous errors
+            clearAllErrors();
+
+            // Name validation
+            const name = document.getElementById('executiveName').value.trim();
+            if (!name) {
+                showError('name', 'Name is required');
+                isValid = false;
+            } else if (name.length < 2) {
+                showError('name', 'Name must be at least 2 characters');
+                isValid = false;
+            }
+
+            // Email validation
+            const email = document.getElementById('executiveEmail').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) {
+                showError('email', 'Email is required');
+                isValid = false;
+            } else if (!emailRegex.test(email)) {
+                showError('email', 'Please enter a valid email address');
+                isValid = false;
+            }
+
+            // Phone validation
+            const phone = document.getElementById('executivePhone').value.trim();
+            const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+            if (!phone) {
+                showError('phone', 'Phone number is required');
+                isValid = false;
+            } else if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+                showError('phone', 'Please enter a valid phone number');
+                isValid = false;
+            }
+
+            // Branch validation
+            if (selectedBranches.length === 0) {
+                showError('branch', 'Please select at least one branch');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function clearError(fieldName) {
+            const errorElement = document.getElementById(fieldName + 'Error');
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
+        }
+
+        function showError(fieldName, message) {
+            const errorElement = document.getElementById(fieldName + 'Error');
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+        }
+
+        function clearAllErrors() {
+            ['name', 'email', 'phone', 'branch'].forEach(clearError);
+        }
+
+        function resetForm() {
+            document.getElementById('executiveForm').reset();
+            selectedBranches = [];
+            editingExecutiveId = null;
+            TemplateRenderer.renderBranches(branches, selectedBranches);
+            clearAllErrors();
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            document.body.style.overflow = 'auto';
+            
+            if (modalId === 'executiveModal') {
+                resetForm();
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadExecutives();
+        }
+
+        // Action Functions
+        function addExecutive() {
+            editingExecutiveId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Delivery Executive';
+            document.querySelector('#executiveForm button[type="submit"] .btn-text').textContent = 'Create Executive';
+            resetForm();
+            openModal('executiveModal');
+        }
+
+        function editExecutive(executiveId) {
+            const executive = executives.find(e => e._id === executiveId);
+            if (!executive) return;
+
+            editingExecutiveId = executiveId;
+            document.getElementById('modalTitle').textContent = 'Edit Delivery Executive';
+            document.querySelector('#executiveForm button[type="submit"] .btn-text').textContent = 'Update Executive';
+
+            // Populate form
+            document.getElementById('executiveName').value = executive.name;
+            document.getElementById('executiveEmail').value = executive.email;
+            document.getElementById('executivePhone').value = executive.phone;
+            document.getElementById('executiveStatus').checked = executive.isActive;
+
+            // Set selected branches
+            selectedBranches = executive.assignedBranches?.map(branch => branch._id) || [];
+            TemplateRenderer.renderBranches(branches, selectedBranches);
+
+            openModal('executiveModal');
+        }
+
+        function confirmDeleteExecutive(executiveId, executiveName, executiveEmail) {
+            document.getElementById('deleteExecutiveDetails').innerHTML = `
+                <div><strong>Name:</strong> ${executiveName}</div>
+                <div><strong>Email:</strong> ${executiveEmail}</div>
+            `;
+            
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteExecutive(executiveId);
+            openModal('deleteModal');
+        }
+
+        async function deleteExecutive(executiveId) {
+            try {
+                const submitBtn = document.getElementById('confirmDeleteBtn');
+                const btnText = submitBtn.querySelector('.btn-text');
+                const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                btnText.classList.add('hidden');
+                btnLoading.classList.remove('hidden');
+                submitBtn.disabled = true;
+
+                await DeliveryExecutiveAPI.deleteExecutive(executiveId);
+
+                closeModal('deleteModal');
+                await loadExecutives();
+                ToastManager.show('Delivery executive deleted successfully', 'success');
+
+            } catch (error) {
+                ToastManager.show('Failed to delete executive: ' + error.message, 'error');
+            } finally {
+                const submitBtn = document.getElementById('confirmDeleteBtn');
+                const btnText = submitBtn.querySelector('.btn-text');
+                const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function toggleExecutiveStatus(executiveId, isActive) {
+            try {
+                await DeliveryExecutiveAPI.toggleExecutiveStatus(executiveId, isActive);
+                ToastManager.show(`Delivery executive ${isActive ? 'activated' : 'deactivated'} successfully`, 'success');
+
+            } catch (error) {
+                // Revert toggle on error
+                const toggle = document.querySelector(`input[onchange*="${executiveId}"]`);
+                if (toggle) {
+                    toggle.checked = !isActive;
+                }
+                ToastManager.show('Failed to update executive status: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadExecutives();
+            loadBranches();
+
+            // Event listeners
+            document.getElementById('addExecutiveBtn').addEventListener('click', addExecutive);
+            document.getElementById('createFirstExecutiveBtn').addEventListener('click', addExecutive);
+            document.getElementById('retryBtn').addEventListener('click', loadExecutives);
+
+            // Form submission
+            document.getElementById('executiveForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                if (!validateForm()) {
+                    ToastManager.show('Please fix the errors in the form', 'error');
+                    return;
+                }
+
+                try {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const btnText = submitBtn.querySelector('.btn-text');
+                    const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                    btnText.classList.add('hidden');
+                    btnLoading.classList.remove('hidden');
+                    submitBtn.disabled = true;
+
+                    const executiveData = {
+                        name: document.getElementById('executiveName').value.trim(),
+                        email: document.getElementById('executiveEmail').value.trim(),
+                        phone: document.getElementById('executivePhone').value.trim(),
+                        assignedBranches: selectedBranches,
+                        isActive: document.getElementById('executiveStatus').checked
+                    };
+
+                    if (editingExecutiveId) {
+                        await DeliveryExecutiveAPI.updateExecutive(editingExecutiveId, executiveData);
+                        ToastManager.show('Delivery executive updated successfully!', 'success');
+                    } else {
+                        await DeliveryExecutiveAPI.createExecutive(executiveData);
+                        ToastManager.show('Delivery executive created successfully!', 'success');
+                    }
+
+                    closeModal('executiveModal');
+                    await loadExecutives();
+
+                } catch (error) {
+                    ToastManager.show('Failed to save executive: ' + error.message, 'error');
+                } finally {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const btnText = submitBtn.querySelector('.btn-text');
+                    const btnLoading = submitBtn.querySelector('.btn-loading');
+
+                    btnText.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
+                    submitBtn.disabled = false;
+                }
+            });
+
+            // Modal close on backdrop click
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeModal(this.id);
+                    }
+                });
+            });
+
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.history.back();
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal.show');
+                    if (openModal) {
+                        closeModal(openModal.id);
+                    }
+                }
+            });
+        });
+
+        // Global functions for inline event handlers
+        window.editExecutive = editExecutive;
+        window.confirmDeleteExecutive = confirmDeleteExecutive;
+        window.toggleExecutiveStatus = toggleExecutiveStatus;
+        window.closeModal = closeModal;
+    </script>
+<%- include('../../partials/Footer') %>

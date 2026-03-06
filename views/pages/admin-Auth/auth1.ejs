@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Café Delights - Premium Authentication</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+  <style>
+    :root {
+      --primary-color: #003F2E;
+      --secondary-color: #D69C4E;
+      --tertiary-color: #F2E8DC;
+      --accent-color: #D4A76A;
+      --text-color: #3A2D24;
+      --error-color: #923838;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #FFFBF7;
+      color: var(--text-color);
+      min-height: 100vh;
+      background-image: url('https://images.unsplash.com/photo-1459755486867-b55449bb39ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1949&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .heading-font {
+      font-family: 'Playfair Display', serif;
+    }
+
+    .auth-container {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    .form-container {
+      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(212, 167, 106, 0.2);
+    }
+
+    .input-label {
+      position: absolute;
+      left: 16px;
+      top: 14px;
+      font-size: 1rem;
+      color: #9ca3af;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus+.input-label,
+    .input-field:not(:placeholder-shown)+.input-label {
+      transform: translateY(-24px) scale(0.8);
+      color: var(--primary-color);
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0 5px;
+      border-radius: 4px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 10px rgba(196, 154, 108, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(196, 154, 108, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 5px rgba(196, 154, 108, 0.3);
+    }
+
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      transition: transform 0.5s, opacity 0.3s;
+    }
+
+    .btn-primary:active::after {
+      transform: translate(-50%, -50%) scale(2);
+      opacity: 0;
+    }
+
+    .toggle-link {
+      font-weight: 500;
+      color: var(--primary-color);
+      transition: all 0.3s ease;
+      position: relative;
+      display: inline-block;
+    }
+
+    .toggle-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: var(--accent-color);
+      transition: width 0.3s ease;
+    }
+
+    .toggle-link:hover::after {
+      width: 100%;
+    }
+
+    @keyframes steam {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+      }
+
+      15% {
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: translateY(-15px) scale(1.5);
+        opacity: 0.4;
+      }
+
+      100% {
+        transform: translateY(-30px) scale(2);
+        opacity: 0;
+      }
+    }
+
+    .coffee-icon {
+      position: relative;
+    }
+
+    .coffee-steam {
+      position: absolute;
+      top: -12px;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      width: 8px;
+      height: 8px;
+      background: transparent;
+      border-radius: 50%;
+      animation: steam 2s infinite ease-out;
+    }
+
+    .coffee-steam:nth-child(2) {
+      left: -5px;
+      animation-delay: 0.4s;
+    }
+
+    .coffee-steam:nth-child(3) {
+      left: 5px;
+      animation-delay: 0.8s;
+    }
+
+    .card-flip {
+      perspective: 1000px;
+    }
+
+    .card-flip-inner {
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+    }
+
+    .flip-to-otp .card-flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .otp-input {
+      width: 50px;
+      height: 60px;
+      margin: 0 5px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+    }
+
+    .otp-input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(212, 167, 106, 0.3);
+      outline: none;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .pulse-error {
+      animation: pulse 0.3s ease-in-out;
+      border-color: var(--error-color) !important;
+      color: var(--error-color);
+    }
+
+    .masked-email {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--primary-color);
+      font-weight: 600;
+      padding: 0 5px;
+      background: rgba(242, 232, 220, 0.5);
+      border-radius: 4px;
+    }
+
+    .timer-progress {
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      overflow: hidden;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+      transition: width 1s linear;
+    }
+
+    @media (max-width: 640px) {
+      .auth-container {
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
+      }
+
+      .otp-input {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
+        margin: 0 2px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .auth-container {
+        transform: translateY(0);
+        margin: 2rem auto;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .auth-decoration {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(135deg, var(--tertiary-color), var(--accent-color));
+      border-radius: 50%;
+      opacity: 0.15;
+      z-index: -1;
+      filter: blur(40px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="min-h-screen py-6 flex flex-col justify-center sm:py-12 relative">
+    <!-- Decorative elements -->
+    <div class="auth-decoration" style="top: 20%; left: 15%;"></div>
+    <div class="auth-decoration" style="bottom: 10%; right: 10%;"></div>
+
+    <div class="relative py-3 sm:w-full md:max-w-md lg:max-w-lg mx-auto">
+      <div x-data="{
+    view: 'signup', 
+    error: '',
+    name: '',
+    email: '',
+    otpValues: ['','','','','',''],
+    otpIndex: 0,
+    isSubmitting: false,
+    timer: 45,
+    timerRunning: false,
+    timerWidth: '100%',
+    otpError: false,
+    otpErrorMessage: '',
+    attemptsRemaining: 3,
+    maskedEmail: '',
+
+    async submitForm() {
+        if (!this.validateForm()) return;
+
+        this.isSubmitting = true;
+        this.error = '';
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: this.name, email: this.email })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to submit');
+            }
+
+            this.maskedEmail = this.maskEmail(this.email);
+            document.querySelector('.card-flip-inner').classList.add('flip-to-otp');
+            document.getElementById('signup-card').classList.remove('card-front')
+            document.getElementById('signup-card').classList.add('card-back')
+            document.getElementById('otp-box').classList.add('card-front')
+            document.getElementById('otp-box').classList.remove('card-back')
+            setTimeout(() => {
+                document.getElementById('otp-0').focus();
+                this.startTimer();
+            }, 600);
+        } catch (err) {
+            this.error = err.message;
+        } finally {
+            this.isSubmitting = false;
+        }
+    },
+
+    async submitOtp() {
+        const otp = this.otpValues.join('');
+        if (otp.length !== 6) {
+            this.otpError = true;
+            this.otpErrorMessage = 'Please enter all 6 digits';
+            return;
+        }
+
+        this.otpError = false;
+        this.isSubmitting = true;
+
+        try {
+            const response = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: this.email, otp })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle specific error types based on the backend response
+                if (data.error) {
+                    this.otpErrorMessage = data.error;
+                    
+                    // Handle attempts remaining if provided by backend
+                    if (data.attemptsRemaining !== undefined) {
+                        this.attemptsRemaining = data.attemptsRemaining;
+                        this.otpErrorMessage += ` (${data.attemptsRemaining} attempts remaining)`;
+                    }
+                } else {
+                    this.otpErrorMessage = 'Verification failed. Please try again.';
+                }
+                
+                throw new Error(this.otpErrorMessage);
+            }
+
+            // Success flow (redirect or show message)
+            setTimeout(() => {
+                this.resetForm();
+                this.view = 'signup';
+                document.querySelector('.card-flip-inner').classList.remove('flip-to-otp');
+                window.location.href = '/shop'; 
+            }, 500);
+        } catch (err) {
+            this.otpError = true;
+            console.error(err);
+        } finally {
+            this.isSubmitting = false;
+        }
+    },
+
+    // Rest of your functions remain the same...
+    startTimer() {
+        if (this.timerRunning) return;
+        this.timerRunning = true;
+        this.timer = 300; // 5 minutes in seconds
+        this.timerWidth = '100%';
+
+        const timerInterval = setInterval(() => {
+            if (this.timer > 0) {
+                this.timer--;
+                this.timerWidth = (this.timer / 300 * 100) + '%';
+            } else {
+                clearInterval(timerInterval);
+                this.timerRunning = false;
+            }
+        }, 1000);
+    },
+
+    maskEmail(email) {
+        if (!email) return '';
+        const [username, domain] = email.split('@');
+        if (!username || !domain) return email;
+        return username.charAt(0) + '***' + '@' + domain;
+    },
+
+    focusNextInput(index) {
+        if (index < 5) {
+            document.getElementById('otp-' + (index + 1)).focus();
+        }
+    },
+
+    handleOtpInput(e, index) {
+        const value = e.target.value;
+        if (value.length > 1) {
+            this.otpValues[index] = value.charAt(0);
+            e.target.value = value.charAt(0);
+        }
+        if (value.length === 1 && index < 5) {
+            this.focusNextInput(index);
+        }
+        this.otpError = false;
+    },
+
+    handleBackspace(e, index) {
+        if (e.key === 'Backspace') {
+            if (index > 0 && !this.otpValues[index]) {
+                document.getElementById('otp-' + (index - 1)).focus();
+            }
+        }
+    },
+
+    validateForm() {
+        if (!this.name.trim()) {
+            this.error = 'Please enter your name';
+            return false;
+        }
+
+        if (!this.email.trim()) {
+            this.error = 'Please enter your email';
+            return false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(this.email)) {
+            this.error = 'Please enter a valid email address';
+            return false;
+        }
+
+        this.error = '';
+        return true;
+    },
+
+    resetForm() {
+        this.name = '';
+        this.email = '';
+        this.error = '';
+        this.otpValues = ['','','','','',''];
+        this.otpError = false;
+        this.otpErrorMessage = '';
+        this.attemptsRemaining = 3;
+        this.timer = 300; // Reset timer to 5 minutes
+        this.timerRunning = false;
+    },
+
+    toggleView() {
+        this.resetForm();
+        this.view = this.view === 'login' ? 'signup' : 'login';
+    }
+}" class="relative">
+        <div class="auth-container mx-2 sm:mx-auto p-6 md:p-8">
+          <div class="card-flip">
+            <div class="card-flip-inner">
+              <!-- Front card (Login/Signup) -->
+              <div id="signup-card" class="card-front">
+                <div class="text-center mb-8">
+                  <div class="coffee-icon mb-4 inline-block text-5xl text-amber-800">
+                    <i class="fas fa-mug-hot"></i>
+                    <div class="coffee-steam"></div>
+                    <div class="coffee-steam"></div>
+                    <div class="coffee-steam"></div>
+                  </div>
+                  <h1 class="heading-font text-3xl font-bold mb-1">iGrab Story Cafe</h1>
+                  <p x-text="view === 'login' ? 'Welcome back!' : 'Join our coffee community'" class="text-gray-600">
+                  </p>
+                </div>
+
+                <!-- Error message -->
+                <div x-show="error" x-transition
+                  class="bg-red-50 text-error-color p-3 rounded-lg mb-4 text-sm font-medium flex items-center">
+                  <i class="fas fa-exclamation-circle mr-2"></i>
+                  <span x-text="error"></span>
+                </div>
+
+                <form @submit.prevent="submitForm()">
+                  <div class="input-group">
+                    <input type="text" id="name" class="input-field" placeholder=" " x-model="name"
+                      :class="{'border-red-400': error && !name}">
+                    <label for="name" class="input-label">Name</label>
+                  </div>
+
+                  <div class="input-group">
+                    <input type="email" id="email" class="input-field" placeholder=" " x-model="email"
+                      :class="{'border-red-400': error && !email}">
+                    <label for="email" class="input-label">Email</label>
+                  </div>
+
+                  <button type="submit" class="btn-primary w-full flex justify-center items-center"
+                    :disabled="isSubmitting">
+                    <span x-show="!isSubmitting" x-text="view === 'login' ? 'Login' : 'Create Account'"></span>
+                    <span x-show="isSubmitting" class="flex items-center">
+                      <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                      </svg>
+                      Processing...
+                    </span>
+                  </button>
+                </form>
+
+                <div class="text-center mt-6">
+                  <p class="text-gray-600 text-sm">
+                    <span x-show="view === 'login'">Don't have an account?</span>
+                    <span x-show="view === 'signup'">Already have an account?</span>
+                    <a href="#" @click.prevent="toggleView()" class="toggle-link ml-1"
+                      x-text="view === 'login' ? 'Sign up' : 'Login'"></a>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Back card (OTP Verification) -->
+              <div id="otp-box" class="card-back bg-white p-6 md:p-8 rounded-2xl">
+                <div class="text-center mb-8 fade-in">
+                  <div class="coffee-icon mb-4 inline-block text-4xl text-amber-800">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                  <h2 class="heading-font text-2xl font-bold mb-1">Verification Required</h2>
+                  <p class="text-gray-600 text-sm">
+                    We've sent a 6-digit code to
+                    <span class="masked-email" x-text="maskedEmail"></span>
+                  </p>
+                </div>
+
+                <div class="mb-8">
+                  <div class="flex justify-center space-x-2 mb-6">
+                    <template x-for="(digit, index) in 6" :key="index">
+                      <input :id="'otp-' + index" type="text" maxlength="1" class="otp-input"
+                        :class="{'pulse-error': otpError}" x-model="otpValues[index]"
+                        @input="handleOtpInput($event, index)" @keydown="handleBackspace($event, index)">
+                    </template>
+                  </div>
+
+                  <div x-show="otpError" x-transition
+                    class="text-center text-error-color text-sm font-medium mb-4 flex items-center justify-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span x-text="otpErrorMessage"></span>
+                  </div>
+
+                  <div class="flex flex-col items-center">
+                    <button @click="submitOtp" class="btn-primary w-full sm:w-2/3" :disabled="isSubmitting">
+                      <span x-show="!isSubmitting">Verify</span>
+                      <span x-show="isSubmitting" class="flex items-center justify-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                          fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                          </circle>
+                          <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                          </path>
+                        </svg>
+                        Verifying...
+                      </span>
+                    </button>
+
+                    <div class="mt-6 w-full sm:w-2/3">
+                      <div class="flex justify-between text-sm text-gray-600">
+                        <span>Resend code</span>
+                        <span x-text="timer + 's'"></span>
+                      </div>
+                      <div class="timer-progress">
+                        <div class="timer-bar" :style="`width: ${timerWidth}`"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,136 @@
+</div>
+
+<!-- Bottom Navigation (Mobile Only) -->
+<div class="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-20">
+    <div class="flex justify-around items-center">
+        <a onclick="open_url('')" class="flex flex-col items-center space-y-1 py-2 px-3 text-primary">
+            <i class="fas fa-chart-line text-lg"></i>
+            <span class="text-xs font-medium">Dashboard</span>
+        </a>
+        <a onclick="open_url('orders')" class="flex flex-col items-center space-y-1 py-2 px-3 text-gray-400">
+            <div class="relative">
+                <i class="fas fa-shopping-cart text-lg"></i>
+                <!-- <span class="absolute -top-2 -right-2 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span> -->
+            </div>
+            <span class="text-xs">Orders</span>
+        </a>
+        <a onclick="open_url('product')" class="flex flex-col items-center space-y-1 py-2 px-3 text-gray-400">
+            <i class="fas fa-coffee text-lg"></i>
+            <span class="text-xs">Products</span>
+        </a>
+        <!-- <a href="#" class="flex flex-col items-center space-y-1 py-2 px-3 text-gray-400">
+                <i class="fas fa-users text-lg"></i>
+                <span class="text-xs">Customers</span>
+            </a> -->
+        <a onclick="open_url('contacts')" class="flex flex-col items-center space-y-1 py-2 px-3 text-gray-400">
+            <i class="fas fa-envelope-open-text text-lg"></i>
+            <span class="text-xs">Inquiries</span>
+        </a>
+        <% if (admin && admin.role==='superadmin' ) { %>
+            <a onclick="open_url('setting/admin-user')"
+                class="flex flex-col items-center space-y-1 py-2 px-3 text-gray-400">
+                <i class="fas fa-cog text-lg"></i>
+                <span class="text-xs">Settings</span>
+            </a>
+            <% } %>
+    </div>
+</div>
+
+<script>
+    // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const menuToggle = document.getElementById('menuToggle');
+    const closeSidebar = document.getElementById('closeSidebar');
+
+    function openSidebar() {
+        sidebar.classList.add('active');
+        sidebarBackdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebarFunc() {
+        sidebar.classList.remove('active');
+        sidebarBackdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    menuToggle.addEventListener('click', openSidebar);
+    closeSidebar.addEventListener('click', closeSidebarFunc);
+    sidebarBackdrop.addEventListener('click', closeSidebarFunc);
+
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+            closeSidebarFunc();
+        }
+    });
+
+    // Navigation item active state
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+            navItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update page title
+            const title = this.querySelector('span').textContent;
+            document.querySelector('h1').textContent = title;
+
+            // Close sidebar on mobile after selection
+            if (window.innerWidth < 768) {
+                closeSidebarFunc();
+            }
+        });
+    });
+
+    // Dropdown functionality
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            const menu = this.nextElementSibling;
+            menu.style.opacity = menu.style.opacity === '1' ? '0' : '1';
+            menu.style.visibility = menu.style.visibility === 'visible' ? 'hidden' : 'visible';
+            menu.style.transform = menu.style.transform === 'translateY(0px)' ? 'translateY(-10px)' : 'translateY(0px)';
+        });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.dropdown-toggle') && !e.target.closest('.dropdown-menu')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.style.opacity = '0';
+                menu.style.visibility = 'hidden';
+                menu.style.transform = 'translateY(-10px)';
+            });
+        }
+    });
+
+    // Responsive handling
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 768) {
+            closeSidebarFunc();
+        }
+    });
+
+    // Bottom navigation functionality
+    const bottomNavItems = document.querySelectorAll('.bottom-nav a');
+    bottomNavItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+            bottomNavItems.forEach(nav => {
+                nav.classList.remove('text-primary');
+                nav.classList.add('text-gray-400');
+            });
+            this.classList.remove('text-gray-400');
+            this.classList.add('text-primary');
+        });
+    });
+</script>
+
+<%- include('./constant-scripts') %>
+    </body>
+
+    </html>

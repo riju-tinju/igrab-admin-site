@@ -1,0 +1,1184 @@
+<%- include('./partials/Header') %>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>iGrab Admin Dashboard</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+            rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            :root {
+                --primary-color: #1E7065;
+                --primary-light: #2F8A7B;
+                --secondary-color: #F59E0B;
+                --accent-color: #0F766E;
+                --text-color: #1F2937;
+                --error-color: #DC2626;
+                --success-color: #059669;
+                --warning-color: #D97706;
+            }
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #F8FAFC;
+                color: var(--text-color);
+            }
+
+            .brand-teal {
+                background-color: var(--primary-color);
+            }
+
+            .brand-teal-light {
+                background-color: var(--primary-light);
+            }
+
+            .brand-orange {
+                background-color: var(--secondary-color);
+            }
+
+            .text-brand-teal {
+                color: var(--primary-color);
+            }
+
+            .border-brand-teal {
+                border-color: var(--primary-color);
+            }
+
+            .dashboard-card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                border: 1px solid #E5E7EB;
+                transition: all 0.3s ease;
+            }
+
+            .dashboard-card:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .kpi-card {
+                background: linear-gradient(135deg, white 0%, #F8FAFC 100%);
+                border-radius: 16px;
+                padding: 24px;
+                border: 1px solid #E5E7EB;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .kpi-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            }
+
+            .kpi-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .chart-container {
+                position: relative;
+                height: 300px;
+                width: 100%;
+            }
+
+            .chart-container-large {
+                position: relative;
+                height: 400px;
+                width: 100%;
+            }
+
+            .loading-skeleton {
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: loading 1.5s infinite;
+                border-radius: 4px;
+            }
+
+            @keyframes loading {
+                0% {
+                    background-position: 200% 0;
+                }
+
+                100% {
+                    background-position: -200% 0;
+                }
+            }
+
+            .loading-spinner {
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid var(--primary-color);
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .error-state {
+                background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+                color: var(--error-color);
+                padding: 20px;
+                border-radius: 12px;
+                border: 1px solid #FCA5A5;
+            }
+
+            .alert-badge {
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                background: var(--error-color);
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .status-indicator {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 8px;
+            }
+
+            .status-active {
+                background-color: var(--success-color);
+            }
+
+            .status-warning {
+                background-color: var(--warning-color);
+            }
+
+            .status-error {
+                background-color: var(--error-color);
+            }
+
+            .activity-item {
+                padding: 16px 0;
+                border-bottom: 1px solid #F3F4F6;
+                transition: all 0.2s ease;
+            }
+
+            .activity-item:hover {
+                background-color: #F9FAFB;
+                border-radius: 8px;
+                padding: 16px 12px;
+            }
+
+            .activity-item:last-child {
+                border-bottom: none;
+            }
+
+            .notification-dot {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                width: 12px;
+                height: 12px;
+                background: var(--error-color);
+                border-radius: 50%;
+                border: 2px solid white;
+            }
+
+            @media (max-width: 768px) {
+                .chart-container {
+                    height: 250px;
+                }
+
+                .chart-container-large {
+                    height: 300px;
+                }
+
+                .kpi-card {
+                    padding: 16px;
+                }
+            }
+
+            .fade-in {
+                animation: fadeIn 0.6s ease forwards;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .pulse-success {
+                animation: pulseSuccess 2s infinite;
+            }
+
+            @keyframes pulseSuccess {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 10px rgba(5, 150, 105, 0);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <!-- Header -->
+        <header class="brand-teal text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 flex items-center">
+                            <i class="fas fa-coffee text-2xl mr-3"></i>
+                            <h1 class="text-xl font-bold">Admin Dashboard</h1>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- <div class="relative">
+                        <i class="fas fa-bell text-xl cursor-pointer hover:text-yellow-300 transition-colors"></i>
+                        <div id="notificationBadge" class="alert-badge hidden">0</div>
+                    </div> -->
+                        <!-- <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-sm"></i>
+                        </div>
+                        <span class="font-medium">Admin</span>
+                    </div> -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-gray-600">Loading dashboard...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden">
+                <div class="error-state text-center">
+                    <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                    <h3 class="text-lg font-semibold mb-2">Failed to load dashboard</h3>
+                    <p class="mb-4" id="errorMessage">Unable to fetch dashboard data. Please try again.</p>
+                    <button id="retryBtn"
+                        class="brand-teal text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors">
+                        <i class="fas fa-redo mr-2"></i>Retry
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div id="dashboardContent" class="hidden">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Revenue -->
+                    <div class="kpi-card fade-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Total Revenue</p>
+                                <p class="text-2xl font-bold text-gray-900" id="totalRevenue">AED 0</p>
+                                <p class="text-sm text-green-600 mt-1" id="revenueChange">
+                                    <i class="fas fa-arrow-up mr-1"></i>0%
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 brand-teal rounded-full flex items-center justify-center">
+                                <i class="fas fa-dollar-sign text-white text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Orders -->
+                    <div class="kpi-card fade-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Total Orders</p>
+                                <p class="text-2xl font-bold text-gray-900" id="totalOrders">0</p>
+                                <p class="text-sm text-blue-600 mt-1" id="ordersToday">
+                                    <i class="fas fa-shopping-cart mr-1"></i>0 today
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-shopping-bag text-white text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Customers -->
+                    <div class="kpi-card fade-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Total Customers</p>
+                                <p class="text-2xl font-bold text-gray-900" id="totalCustomers">0</p>
+                                <p class="text-sm text-purple-600 mt-1" id="newCustomers">
+                                    <i class="fas fa-user-plus mr-1"></i>0 new
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-users text-white text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Products -->
+                    <div class="kpi-card fade-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Active Products</p>
+                                <p class="text-2xl font-bold text-gray-900" id="activeProducts">0</p>
+                                <p class="text-sm text-orange-600 mt-1" id="lowStockAlert">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>0 low stock
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 brand-orange rounded-full flex items-center justify-center">
+                                <i class="fas fa-box text-white text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Revenue Chart -->
+                    <div class="dashboard-card p-6 fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Revenue Trend</h3>
+                            <span class="text-sm text-gray-500">Last 7 days</span>
+                        </div>
+                        <div class="chart-container-large">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Distribution -->
+                    <div class="dashboard-card p-6 fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Order Status</h3>
+                            <span class="text-sm text-gray-500">Today</span>
+                        </div>
+                        <div class="chart-container-large">
+                            <canvas id="orderStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Top Products -->
+                    <div class="dashboard-card p-6 fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Top Products</h3>
+                            <span class="text-sm text-gray-500">This week</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="topProductsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Branch Performance -->
+                    <div class="dashboard-card p-6 fade-in" style="margin-bottom: 30px;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Branch Performance</h3>
+                            <span class="text-sm text-gray-500">Today</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="branchPerformanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section -->
+
+            </div>
+        </main>
+
+        <script>
+            // State Management
+            let dashboardData = {};
+            let charts = {};
+            let refreshInterval = null;
+
+            // API Configuration
+            const API_BASE_URL = '/api/admin/dashboard';
+
+            // Dashboard API Functions
+            class DashboardAPI {
+                static async fetchOverview() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/overview`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Overview API Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async fetchRevenue(period = '7days') {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/revenue?period=${period}&groupBy=day`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Revenue API Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async fetchOrderAnalytics() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/orders/analytics`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Order Analytics API Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async fetchTopProducts(limit = 10, period = '7days') {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/products/top?limit=${limit}&period=${period}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Top Products API Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async fetchBranchPerformance() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/branches/performance`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Branch Performance API Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async fetchRecentActivities(limit = 20) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/activities/recent?limit=${limit}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Recent Activities API Error:', error);
+                        throw error;
+                    }
+                }
+
+                static async fetchAlerts() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/alerts`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Alerts API Error:', error);
+                        throw error;
+                    }
+                }
+            }
+
+            // UI State Management
+            class UIManager {
+                static showLoading() {
+                    document.getElementById('loadingState').classList.remove('hidden');
+                    document.getElementById('dashboardContent').classList.add('hidden');
+                    document.getElementById('errorState').classList.add('hidden');
+                }
+
+                static showError(message = 'Something went wrong') {
+                    document.getElementById('errorMessage').textContent = message;
+                    document.getElementById('errorState').classList.remove('hidden');
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('dashboardContent').classList.add('hidden');
+                }
+
+                static showDashboard() {
+                    document.getElementById('dashboardContent').classList.remove('hidden');
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('errorState').classList.add('hidden');
+                }
+
+                static formatCurrency(amount) {
+                    return new Intl.NumberFormat('en-AE', {
+                        style: 'currency',
+                        currency: 'AED',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(amount);
+                }
+
+                static formatNumber(number) {
+                    return new Intl.NumberFormat('en-US').format(number);
+                }
+
+                static getTimeAgo(dateString) {
+                    const now = new Date();
+                    const date = new Date(dateString);
+                    const diffInSeconds = Math.floor((now - date) / 1000);
+
+                    if (diffInSeconds < 60) return 'Just now';
+                    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+                }
+            }
+
+            // Chart Management
+            class ChartManager {
+                static createRevenueChart(data) {
+                    const ctx = document.getElementById('revenueChart').getContext('2d');
+
+                    if (charts.revenue) {
+                        charts.revenue.destroy();
+                    }
+
+                    charts.revenue = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                            datasets: [{
+                                label: 'Revenue',
+                                data: data.map(item => item.revenue),
+                                borderColor: '#1E7065',
+                                backgroundColor: 'rgba(30, 112, 101, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#1E7065',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function (value) {
+                                            return 'AED ' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            },
+                            elements: {
+                                point: {
+                                    hoverRadius: 8
+                                }
+                            }
+                        }
+                    });
+                }
+
+                static createOrderStatusChart(data) {
+                    const ctx = document.getElementById('orderStatusChart').getContext('2d');
+
+                    if (charts.orderStatus) {
+                        charts.orderStatus.destroy();
+                    }
+
+                    const colors = ['#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6'];
+
+                    charts.orderStatus = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.map(item => item.status),
+                            datasets: [{
+                                data: data.map(item => item.count),
+                                backgroundColor: colors.slice(0, data.length),
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                static createTopProductsChart(data) {
+                    const ctx = document.getElementById('topProductsChart').getContext('2d');
+
+                    if (charts.topProducts) {
+                        charts.topProducts.destroy();
+                    }
+
+                    charts.topProducts = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(item => item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name),
+                            datasets: [{
+                                label: 'Units Sold',
+                                data: data.map(item => item.totalSold),
+                                backgroundColor: '#F59E0B',
+                                borderColor: '#D97706',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                static createBranchPerformanceChart(data) {
+                    const ctx = document.getElementById('branchPerformanceChart').getContext('2d');
+
+                    if (charts.branchPerformance) {
+                        charts.branchPerformance.destroy();
+                    }
+
+                    charts.branchPerformance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(item => item.name),
+                            datasets: [{
+                                label: 'Revenue',
+                                data: data.map(item => item.todayRevenue),
+                                backgroundColor: '#1E7065',
+                                borderColor: '#0F766E',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function (value) {
+                                            return 'AED ' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Data Population Functions
+            function populateKPICards(stats) {
+                document.getElementById('totalRevenue').textContent = UIManager.formatCurrency(stats.totalRevenue.thisMonth);
+                document.getElementById('revenueChange').innerHTML = `
+                <i class="fas fa-arrow-${stats.totalRevenue.percentageChange >= 0 ? 'up' : 'down'} mr-1"></i>
+                ${Math.abs(stats.totalRevenue.percentageChange).toFixed(1)}%
+            `;
+                document.getElementById('revenueChange').className = `text-sm mt-1 ${stats.totalRevenue.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`;
+
+                document.getElementById('totalOrders').textContent = UIManager.formatNumber(stats.orders.total);
+                document.getElementById('ordersToday').innerHTML = `
+                <i class="fas fa-shopping-cart mr-1"></i>${stats.orders.today} today
+            `;
+
+                document.getElementById('totalCustomers').textContent = UIManager.formatNumber(stats.customers.total);
+                document.getElementById('newCustomers').innerHTML = `
+                <i class="fas fa-user-plus mr-1"></i>${stats.customers.newToday} new
+            `;
+
+                document.getElementById('activeProducts').textContent = UIManager.formatNumber(stats.products.published);
+                document.getElementById('lowStockAlert').innerHTML = `
+                <i class="fas fa-exclamation-triangle mr-1"></i>${stats.products.lowStock} low stock
+            `;
+                document.getElementById('lowStockAlert').className = `text-sm mt-1 ${stats.products.lowStock > 0 ? 'text-orange-600' : 'text-green-600'}`;
+            }
+
+            function populateRecentActivities(activities) {
+                const container = document.getElementById('recentActivities');
+                container.innerHTML = '';
+
+                if (activities.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No recent activities</p>';
+                    return;
+                }
+
+                activities.forEach(activity => {
+                    const activityElement = document.createElement('div');
+                    activityElement.className = 'activity-item';
+
+                    const iconClass = activity.type === 'order_placed' ? 'fa-shopping-cart text-blue-500' :
+                        activity.type === 'product_low_stock' ? 'fa-exclamation-triangle text-orange-500' :
+                            activity.type === 'customer_registered' ? 'fa-user-plus text-green-500' :
+                                'fa-info-circle text-gray-500';
+
+                    activityElement.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${iconClass} text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">${activity.message}</p>
+                            ${activity.user ? `<p class="text-xs text-gray-500 mt-1">Customer: ${activity.user}</p>` : ''}
+                            ${activity.amount ? `<p class="text-xs text-green-600 mt-1 font-medium">Amount: ${UIManager.formatCurrency(activity.amount)}</p>` : ''}
+                            <p class="text-xs text-gray-400 mt-1">${UIManager.getTimeAgo(activity.timestamp)}</p>
+                        </div>
+                    </div>
+                `;
+
+                    container.appendChild(activityElement);
+                });
+            }
+
+            function populateAlerts(alerts) {
+                const container = document.getElementById('alertsList');
+                const badge = document.getElementById('notificationBadge');
+
+                container.innerHTML = '';
+
+                if (alerts.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No alerts</p>';
+                    badge.classList.add('hidden');
+                    return;
+                }
+
+                badge.textContent = alerts.filter(alert => alert.actionRequired).length;
+                badge.classList.remove('hidden');
+
+                alerts.forEach(alert => {
+                    const alertElement = document.createElement('div');
+                    alertElement.className = `p-4 rounded-lg border mb-4 ${alert.severity === 'warning' ? 'bg-orange-50 border-orange-200' :
+                            alert.severity === 'error' ? 'bg-red-50 border-red-200' :
+                                'bg-blue-50 border-blue-200'
+                        }`;
+
+                    const iconClass = alert.severity === 'warning' ? 'fa-exclamation-triangle text-orange-500' :
+                        alert.severity === 'error' ? 'fa-exclamation-circle text-red-500' :
+                            'fa-info-circle text-blue-500';
+
+                    alertElement.innerHTML = `
+                    <div class="flex items-start">
+                        <i class="fas ${iconClass} mt-1 mr-3"></i>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-gray-900">${alert.title}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${alert.message}</p>
+                            <p class="text-xs text-gray-400 mt-2">${UIManager.getTimeAgo(alert.createdAt)}</p>
+                        </div>
+                    </div>
+                `;
+
+                    container.appendChild(alertElement);
+                });
+            }
+
+            // Mock Data Functions (for demo purposes)
+            function generateMockOverview() {
+                return {
+                    success: true,
+                    data: {
+                        stats: {
+                            totalRevenue: {
+                                today: 2450.75,
+                                yesterday: 2180.50,
+                                thisWeek: 15600.25,
+                                lastWeek: 14200.80,
+                                thisMonth: 65400.00,
+                                lastMonth: 58900.50,
+                                percentageChange: 8.5
+                            },
+                            orders: {
+                                total: 1247,
+                                today: 45,
+                                pending: 12,
+                                confirmed: 18,
+                                processing: 8,
+                                delivered: 156,
+                                cancelled: 7,
+                                averageOrderValue: 54.50
+                            },
+                            customers: {
+                                total: 3420,
+                                newToday: 15,
+                                newThisWeek: 89,
+                                activeCustomers: 2890,
+                                growthRate: 12.3
+                            },
+                            products: {
+                                total: 247,
+                                published: 198,
+                                outOfStock: 8,
+                                lowStock: 12,
+                                topSellingToday: 5
+                            },
+                            branches: {
+                                total: 8,
+                                active: 8,
+                                topPerforming: "Downtown Dubai",
+                                totalSalesToday: 2450.75
+                            }
+                        }
+                    }
+                };
+            }
+
+            function generateMockRevenue() {
+                const days = 7;
+                const data = [];
+                const today = new Date();
+
+                for (let i = days - 1; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    data.push({
+                        date: date.toISOString(),
+                        revenue: Math.floor(Math.random() * 1000) + 1500,
+                        orders: Math.floor(Math.random() * 30) + 20,
+                        averageOrderValue: Math.floor(Math.random() * 20) + 45
+                    });
+                }
+
+                return {
+                    success: true,
+                    data: {
+                        revenueData: data,
+                        summary: {
+                            totalRevenue: data.reduce((sum, item) => sum + item.revenue, 0),
+                            totalOrders: data.reduce((sum, item) => sum + item.orders, 0),
+                            averageDaily: data.reduce((sum, item) => sum + item.revenue, 0) / data.length,
+                            growthRate: 8.5
+                        }
+                    }
+                };
+            }
+
+            function generateMockOrderAnalytics() {
+                return {
+                    success: true,
+                    data: {
+                        statusDistribution: [
+                            { status: "Delivered", count: 156, percentage: 65.8 },
+                            { status: "Processing", count: 42, percentage: 17.7 },
+                            { status: "Confirmed", count: 28, percentage: 11.8 },
+                            { status: "Pending", count: 8, percentage: 3.4 },
+                            { status: "Cancelled", count: 3, percentage: 1.3 }
+                        ]
+                    }
+                };
+            }
+
+            function generateMockTopProducts() {
+                return {
+                    success: true,
+                    data: {
+                        topProducts: [
+                            { productId: "prod123", name: "Classic Espresso", category: "Coffee", totalSold: 145, revenue: 2610.00, growth: 12.5 },
+                            { productId: "prod124", name: "Chocolate Croissant", category: "Pastries", totalSold: 89, revenue: 1468.50, growth: -5.2 },
+                            { productId: "prod125", name: "Cappuccino", category: "Coffee", totalSold: 76, revenue: 1520.00, growth: 8.1 },
+                            { productId: "prod126", name: "Blueberry Muffin", category: "Pastries", totalSold: 65, revenue: 975.00, growth: 15.3 },
+                            { productId: "prod127", name: "Green Tea", category: "Beverages", totalSold: 54, revenue: 810.00, growth: 3.2 }
+                        ]
+                    }
+                };
+            }
+
+            function generateMockBranchPerformance() {
+                return {
+                    success: true,
+                    data: {
+                        branchPerformance: [
+                            { branchId: "branch123", name: "Downtown Dubai", todayRevenue: 890.25, todayOrders: 25, weekRevenue: 5240.75, weekOrders: 142, growth: 15.3 },
+                            { branchId: "branch124", name: "Marina Mall", todayRevenue: 645.50, todayOrders: 18, weekRevenue: 3890.25, weekOrders: 98, growth: -2.1 },
+                            { branchId: "branch125", name: "JBR Beach", todayRevenue: 520.75, todayOrders: 15, weekRevenue: 3240.50, weekOrders: 85, growth: 5.8 },
+                            { branchId: "branch126", name: "DIFC", todayRevenue: 394.25, todayOrders: 12, weekRevenue: 2890.75, weekOrders: 72, growth: 12.4 }
+                        ]
+                    }
+                };
+            }
+
+            function generateMockActivities() {
+                return {
+                    success: true,
+                    data: {
+                        activities: [
+                            {
+                                id: "act123",
+                                type: "order_placed",
+                                message: "New order #ORD-2023-001234 placed",
+                                user: "Ahmed Hassan",
+                                amount: 45.50,
+                                timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+                                status: "pending"
+                            },
+                            {
+                                id: "act124",
+                                type: "product_low_stock",
+                                message: "Classic Espresso is running low (8 units left)",
+                                product: "Classic Espresso",
+                                stock: 8,
+                                timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+                                priority: "medium"
+                            },
+                            {
+                                id: "act125",
+                                type: "customer_registered",
+                                message: "New customer registration",
+                                user: "Sarah Mohammed",
+                                timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+                            },
+                            {
+                                id: "act126",
+                                type: "order_placed",
+                                message: "Order #ORD-2023-001235 completed",
+                                user: "Omar Ali",
+                                amount: 78.25,
+                                timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+                                status: "completed"
+                            }
+                        ]
+                    }
+                };
+            }
+
+            function generateMockAlerts() {
+                return {
+                    success: true,
+                    data: {
+                        alerts: [
+                            {
+                                id: "alert123",
+                                type: "low_stock",
+                                title: "Low Stock Alert",
+                                message: "5 products are running low on stock",
+                                severity: "warning",
+                                count: 5,
+                                actionRequired: true,
+                                createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+                            },
+                            {
+                                id: "alert124",
+                                type: "pending_orders",
+                                title: "Pending Orders",
+                                message: "12 orders are waiting for confirmation",
+                                severity: "info",
+                                count: 12,
+                                actionRequired: true,
+                                createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+                            },
+                            {
+                                id: "alert125",
+                                type: "system_update",
+                                title: "System Update",
+                                message: "New features are available in the admin panel",
+                                severity: "info",
+                                actionRequired: false,
+                                createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+                            }
+                        ],
+                        unreadCount: 2
+                    }
+                };
+            }
+
+            // Main Dashboard Loading Function
+            async function loadDashboard() {
+                UIManager.showLoading();
+
+                try {
+                    // Use mock data for demo - replace with actual API calls
+                    const [overview, revenue, orderAnalytics, topProducts, branchPerformance, activities, alerts] = await Promise.all([
+                        DashboardAPI.fetchOverview(),
+                        DashboardAPI.fetchRevenue(),
+                        DashboardAPI.fetchOrderAnalytics(),
+                        DashboardAPI.fetchTopProducts(),
+                        DashboardAPI.fetchBranchPerformance(),
+                        // DashboardAPI.fetchRecentActivities(),
+                        // DashboardAPI.fetchAlerts()
+
+                        // Mock data for demo
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockOverview()), 500)),
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockRevenue()), 600)),
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockOrderAnalytics()), 700)),
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockTopProducts()), 800)),
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockBranchPerformance()), 900)),
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockActivities()), 1000)),
+                        // new Promise(resolve => setTimeout(() => resolve(generateMockAlerts()), 1100))
+                    ]);
+
+                    // Store data
+                    dashboardData = {
+                        overview: overview.data,
+                        revenue: revenue.data,
+                        orderAnalytics: orderAnalytics.data,
+                        topProducts: topProducts.data,
+                        branchPerformance: branchPerformance.data,
+                        // activities: activities.data,
+                        // alerts: alerts.data
+                    };
+
+                    // Populate UI
+                    populateKPICards(dashboardData.overview.stats);
+                    // populateRecentActivities(dashboardData.activities.activities);
+                    // populateAlerts(dashboardData.alerts.alerts);
+
+                    // Create Charts
+                    ChartManager.createRevenueChart(dashboardData.revenue.revenueData);
+                    ChartManager.createOrderStatusChart(dashboardData.orderAnalytics.statusDistribution);
+                    ChartManager.createTopProductsChart(dashboardData.topProducts.topProducts);
+                    ChartManager.createBranchPerformanceChart(dashboardData.branchPerformance.branchPerformance);
+
+                    UIManager.showDashboard();
+
+                    // Set up auto refresh
+                    startAutoRefresh();
+
+                } catch (error) {
+                    console.error('Dashboard Load Error:', error);
+                    UIManager.showError(error.message || 'Failed to load dashboard data');
+                }
+            }
+
+            // Auto Refresh Function
+            function startAutoRefresh() {
+                // Refresh every 5 minutes
+                refreshInterval = setInterval(async () => {
+                    try {
+                        // Refresh only critical data
+                        const [overview, activities, alerts] = await Promise.all([
+                            // DashboardAPI.fetchOverview(),
+                            // DashboardAPI.fetchRecentActivities(20),
+                            // DashboardAPI.fetchAlerts()
+
+                            // Mock data for demo
+                            generateMockOverview(),
+                            generateMockActivities(),
+                            generateMockAlerts()
+                        ]);
+
+                        // Update KPIs
+                        populateKPICards(overview.data.stats);
+                        populateRecentActivities(activities.data.activities);
+                        populateAlerts(alerts.data.alerts);
+
+                        console.log('Dashboard auto-refreshed');
+                    } catch (error) {
+                        console.error('Auto-refresh error:', error);
+                    }
+                }, 5 * 60 * 1000); // 5 minutes
+            }
+
+            // Initialize Dashboard
+            document.addEventListener('DOMContentLoaded', function () {
+                loadDashboard();
+
+                // Retry button
+                document.getElementById('retryBtn').addEventListener('click', loadDashboard);
+
+                // Cleanup on page unload
+                window.addEventListener('beforeunload', function () {
+                    if (refreshInterval) {
+                        clearInterval(refreshInterval);
+                    }
+
+                    // Destroy charts
+                    Object.values(charts).forEach(chart => {
+                        if (chart) chart.destroy();
+                    });
+                });
+            });
+        </script>
+
+
+        <%- include('./partials/Footer') %>
+
+            <!-- Main Content -->
+            <!-- <main class="main-content p-4 sm:p-6"> -->
+            <!-- Content Placeholder -->
+            <!-- <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-line text-2xl text-gray-400"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Welcome to iGrabb Story Admin</h2>
+                <p class="text-gray-600 mb-6">This is where your main dashboard content will be displayed.</p>
+                <div class="text-sm text-gray-500 bg-gray-50 rounded-lg p-4 inline-block"> -->
+            <!-- Main content will be injected here -->
+            <!-- </div>
+            </div>
+        </main> -->
