@@ -155,10 +155,10 @@ app.use(express.static(path.join(__dirname, '../storage/public/brands')));
 app.use(express.static(path.join(__dirname, '../storage/public/categories')));
 app.use(express.static(path.join(__dirname, '../storage/public/others')));
 
-app.use('/uploads', express.static(path.join(__dirname, '../storage/public/products')));
-app.use('/uploads', express.static(path.join(__dirname, '../storage/public/brands')));
-app.use('/uploads', express.static(path.join(__dirname, '../storage/public/categories')));
-app.use('/uploads', express.static(path.join(__dirname, '../storage/public/others')));
+app.use('/uploads/products', express.static(path.join(__dirname, '../storage/public/products')));
+app.use('/uploads/brands', express.static(path.join(__dirname, '../storage/public/brands')));
+app.use('/uploads/categories', express.static(path.join(__dirname, '../storage/public/categories')));
+app.use('/uploads/others', express.static(path.join(__dirname, '../storage/public/others')));
 
 
 app.use('/', adminAuthRouter)

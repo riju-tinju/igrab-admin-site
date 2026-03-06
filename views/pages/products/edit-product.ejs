@@ -1492,7 +1492,7 @@
                     previewDiv.className = 'image-preview existing-image relative';
                     previewDiv.dataset.url = imageUrl;
 
-                    const displayUrl = (imageUrl.startsWith('/') || imageUrl.startsWith('http')) ? imageUrl : '/' + imageUrl;
+                    const displayUrl = (imageUrl.startsWith('/') || imageUrl.startsWith('http')) ? imageUrl : '/uploads/products/' + imageUrl;
 
                     previewDiv.innerHTML = `
                     <img src="${displayUrl}" alt="Product Image" class="w-full h-32 object-cover rounded-lg" onerror="this.src='/static-files/placeholder.png'; this.parentElement.classList.add('image-error');">

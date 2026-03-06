@@ -71,7 +71,7 @@ const productFun = {
           totalOrders: product.sales?.totalOrders || 0,
           brand: product.brandId?.name || "No Brand",
           status: product.status?.isPublished ? "published" : "unpublished",
-          image: product.images?.[0] || "",
+          image: product.images?.[0] ? '/uploads/products/' + product.images[0] : "",
           createdAt: product.createdAt,
         };
       });

@@ -2023,7 +2023,9 @@
             function showLogoPreview(imageUrl) {
                 document.getElementById('logoUploadPlaceholder').style.display = 'none';
                 document.getElementById('logoPreview').classList.remove('hidden');
-                document.getElementById('logoImage').src = imageUrl;
+
+                const displayUrl = (imageUrl.startsWith('/') || imageUrl.startsWith('http')) ? imageUrl : '/uploads/brands/' + imageUrl;
+                document.getElementById('logoImage').src = displayUrl;
             }
 
             function removeLogo() {
@@ -2036,6 +2038,14 @@
                 document.getElementById('faviconUploadPlaceholder').style.display = 'block';
                 document.getElementById('faviconPreview').classList.add('hidden');
                 document.getElementById('faviconImage').src = '';
+            }
+
+            function showOgImagePreview(imageUrl) {
+                document.getElementById('ogImageUploadPlaceholder').style.display = 'none';
+                document.getElementById('ogImagePreview').classList.remove('hidden');
+
+                const displayUrl = (imageUrl.startsWith('/') || imageUrl.startsWith('http')) ? imageUrl : '/uploads/others/' + imageUrl;
+                document.getElementById('ogImageImage').src = displayUrl;
             }
 
             function removeOgImage() {

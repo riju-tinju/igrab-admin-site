@@ -905,7 +905,7 @@
                         const response = await fetch(`${API_BASE_URL}/settings/upload`, {
                             method: 'POST',
                             body: formData,
-                            
+
                         });
                         if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         return await response.json();
@@ -1360,7 +1360,7 @@
                     // Simulate API call
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     // const branches = mockBranches; // Replace with: (await SettingsAPI.getBranches()).data.branches;
-                    const branches =  (await SettingsAPI.getBranches()).data.branches;
+                    const branches = (await SettingsAPI.getBranches()).data.branches;
 
                     if (branches.length === 0) {
                         container.innerHTML = `
@@ -1441,7 +1441,7 @@
 
                 // setupOperatingHours();
                 // setupOperatingHours();
-                
+
                 openModal('branchModal');
             }
 
