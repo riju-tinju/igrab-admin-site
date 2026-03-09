@@ -145,7 +145,14 @@ app.use(
 // Session Debug Middleware - REMOVED after verification
 // app.use((req, res, next) => { ... });
 
-app.use(logger('dev'));
+// Custom request logger - only logs requests details as requested
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString().replace('T', ' ').split('.')[0];
+  console.log(`[${timestamp}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// app.use(logger('dev'));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));
 app.use(cookieParser());

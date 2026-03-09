@@ -9,7 +9,8 @@ const connectFunction = {
       const db = mongoose.connection;
       db.on("error", console.error.bind(console, "MongoDB connection error:"));
       db.once("open", () => {
-        console.log(`Connected to MongoDB database ${process.env.DB_NAME}`);
+        console.log(`\nConnected to MongoDB database ${process.env.DB_NAME}`);
+        console.log(`Admin site running on port ${process.env.PORT}\n`);
       });
     }catch(err){
       console.log("an connection problem in"+ process.env.DB_NAME);

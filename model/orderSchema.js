@@ -63,7 +63,10 @@ const orderSchema = new mongoose.Schema({
         ref: 'Product',
         required: true
       },
-      name: String,
+      name: {
+        en: { type: String, required: true },
+        ar: { type: String, required: true }
+      },
       image: String,
       qty: Number,
       unitPrice: Number,
@@ -71,7 +74,7 @@ const orderSchema = new mongoose.Schema({
     }
   ],
   deliveryExecutive: {
-    assigned:{
+    assigned: {
       type: Boolean,
       default: false
     },
@@ -83,7 +86,7 @@ const orderSchema = new mongoose.Schema({
     name: String,
     phone: String,
     email: String,
-    deliveryCharge:Number,
+    deliveryCharge: Number,
     assignedTime: Date,
     deliveryTime: Date,
   },
@@ -110,7 +113,7 @@ const orderSchema = new mongoose.Schema({
         // required: true
       }
     },
-    distance:{
+    distance: {
       type: Number,
       default: 0
     },
