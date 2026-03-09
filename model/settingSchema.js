@@ -44,7 +44,7 @@ const settingSchema = new mongoose.Schema({
     required: false, // Logo can be optional
     trim: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         // Basic URL validation
         return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(v);
       },
@@ -63,7 +63,7 @@ const settingSchema = new mongoose.Schema({
     trim: true,
     // Basic regex for international phone numbers, adjust as needed
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^\+?[1-9]\d{1,14}$/.test(v); // E.164 format (up to 15 digits, optional +)
       },
       message: props => `${props.value} is not a valid phone number!`
@@ -76,7 +76,7 @@ const settingSchema = new mongoose.Schema({
     lowercase: true,
     unique: true, // Assuming email should be unique for settings
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v); // Standard email regex
       },
       message: props => `${props.value} is not a valid email address!`
@@ -94,6 +94,10 @@ const settingSchema = new mongoose.Schema({
   address: {
     type: addressSchema,
     required: true
+  },
+  isSetupComplete: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true }); // Adds createdAt and updatedAt timestamps automatically
 

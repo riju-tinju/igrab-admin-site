@@ -21,6 +21,7 @@ var adminAuthRouter = require('./routes/adminAuth');
 var dashboardRouter = require('./routes/dashboard');
 var settingRouter = require('./routes/settings')
 var contactRouter = require('./routes/contacts');
+var setupRouter = require('./routes/setup');
 
 const getAdmin = require('./helper/getAdmin');
 require("dotenv").config();
@@ -33,6 +34,15 @@ var app = express();
 
 // Trust Proxy (Required for Nginx/Heroku/Load Balancers)
 app.set('trust proxy', 1);
+
+// Custom request logger - MUST be first to log every request
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    console.log(`[${timestamp}] ${req.method} ${req.originalUrl} - status: ${res.statusCode}`);
+  });
+  next();
+});
 
 // Security Headers with CSP configuration
 // app.use(helmet({
@@ -126,7 +136,7 @@ app.use(
     store: MongoStore.create({
       mongoUrl: `mongodb://localhost:27017/${process.env.DB_NAME || 'iGrab_DB'}`,
       collectionName: 'admin_sessions',
-      ttl: 14 * 24 * 60 * 60, // 14 days in seconds
+      ttl: 30 * 24 * 60 * 60, // 30 days in seconds
       autoRemove: 'native', // Let MongoDB handle expired session cleanup
       touchAfter: 24 * 3600, // Lazy session update - update session once per 24 hours
       crypto: {
@@ -144,13 +154,6 @@ app.use(
 
 // Session Debug Middleware - REMOVED after verification
 // app.use((req, res, next) => { ... });
-
-// Custom request logger - only logs requests details as requested
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString().replace('T', ' ').split('.')[0];
-  console.log(`[${timestamp}] ${req.method} ${req.originalUrl}`);
-  next();
-});
 
 // app.use(logger('dev'));
 app.use(express.json({ limit: '10kb' }));
@@ -170,6 +173,8 @@ app.use('/uploads/others', express.static(path.join(__dirname, '../storage/publi
 
 app.use('/', adminAuthRouter)
 app.use(verifyAdmin);
+const verifySetup = require('./middleware/verifySetup');
+app.use(verifySetup);
 app.use(getAdmin);
 
 app.use('/', dashboardRouter);
@@ -179,6 +184,7 @@ app.use('/', orderRouter);
 app.use('/', settingRouter);
 app.use('/', deliveryExecutiveRouter);
 app.use('/', contactRouter);
+app.use('/', setupRouter);
 app.use(verifySuperAdmin);
 app.use('/', adminUserRouter);
 

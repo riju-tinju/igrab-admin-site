@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iGrab Admin - Setup Wizard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .step-active {
+            color: #1E7065;
+            font-weight: 700;
+        }
+
+        .step-done {
+            color: #10B981;
+        }
+
+        .btn-primary {
+            background-color: #1E7065;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #2F8A7B;
+            transform: translateY(-2px);
+        }
+
+        .fade-enter {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .fade-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans text-gray-900 overflow-x-hidden">
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8" x-data="setupWizard()">
+
+        <!-- Logo/Header -->
+        <div class="mb-8 text-center animate-fade-in">
+            <h1 class="text-4xl font-extrabold text-[#1E7065] tracking-tight">iGrab<span
+                    class="text-gray-400 font-light">Admin</span></h1>
+            <p class="text-gray-500 mt-2 font-medium">Platform Setup Wizard</p>
+        </div>
+
+        <!-- Wizard Card -->
+        <div
+            class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 flex flex-col md:flex-row min-h-[500px]">
+
+            <!-- Sidebar Navigation (Desktop) -->
+            <div class="bg-[#1E7065] md:w-56 p-8 text-white hidden md:block">
+                <h3 class="text-xs uppercase tracking-widest text-teal-200 font-bold mb-8">Progress</h3>
+                <ul class="space-y-6">
+                    <template x-for="(step, index) in steps" :key="index">
+                        <li class="flex items-center gap-3 transition-all duration-300"
+                            :class="currentStep === index ? 'opacity-100' : 'opacity-40'">
+                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0"
+                                :class="currentStep >= index ? 'bg-white text-[#1E7065] border-white' : 'border-teal-400'">
+                                <span x-text="index + 1" x-show="currentStep <= index"></span>
+                                <i class="fas fa-check" x-show="currentStep > index"></i>
+                            </div>
+                            <span class="text-sm font-bold" x-text="step"></span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 p-8 sm:p-12 relative flex flex-col">
+
+                <!-- Step Counter (Mobile) -->
+                <div class="md:hidden flex justify-between items-center mb-6">
+                    <span class="text-xs font-bold text-[#1E7065] uppercase tracking-widest"
+                        x-text="'Step ' + (currentStep + 1)"></span>
+                    <div class="flex gap-1">
+                        <template x-for="i in steps.length" :key="i">
+                            <div class="w-6 h-1 rounded-full"
+                                :class="(i-1) <= currentStep ? 'bg-[#1E7065]' : 'bg-gray-200'"></div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="flex-1">
+                    <!-- Step 0: Welcome -->
+                    <div x-show="currentStep === 0" x-transition.opacity.duration.400ms class="space-y-6">
+                        <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fas fa-rocket text-3xl text-[#1E7065]"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold tracking-tight">Welcome to iGrab!</h2>
+                        <p class="text-gray-600 leading-relaxed">Let's get your platform ready for business. This setup
+                            takes less than 2 minutes and will help us configure your shop correctly.</p>
+                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 items-start">
+                            <i class="fas fa-info-circle text-amber-500 mt-1"></i>
+                            <p class="text-xs text-amber-800 leading-normal">You're currently logged in as a
+                                <strong>System Admin</strong>. We'll help you personalize your profile in a few steps.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 1: Branding -->
+                    <div x-show="currentStep === 1" x-transition.opacity.duration.400ms class="space-y-6">
+                        <h2 class="text-2xl font-bold tracking-tight">Shop Branding</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Shop Name *</label>
+                                <input type="text" x-model="formData.shopName" placeholder="iGrab Story Cafe"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Logo URL (Optional)</label>
+                                <input type="text" x-model="formData.logo" placeholder="https://example.com/logo.png"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Store Location -->
+                    <div x-show="currentStep === 2" x-transition.opacity.duration.400ms class="space-y-6">
+                        <h2 class="text-2xl font-bold tracking-tight">Main Branch Location</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Primary Address *</label>
+                                <textarea x-model="formData.address.fullAddress"
+                                    placeholder="e.g. Al-Quoz 3, Dubai, UAE"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all resize-none h-24"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">Emirate/City</label>
+                                    <input type="text" x-model="formData.address.city"
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#1E7065] outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">Country</label>
+                                    <input type="text" x-model="formData.address.country" readonly
+                                        class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Admin Identity -->
+                    <div x-show="currentStep === 3" x-transition.opacity.duration.400ms class="space-y-6">
+                        <h2 class="text-2xl font-bold tracking-tight">Admin Profile</h2>
+                        <p class="text-sm text-gray-500">Update the default system credentials to yours.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Your Full Name *</label>
+                                <input type="text" x-model="formData.adminName"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all">
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="w-24">
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Code</label>
+                                    <input type="text" x-model="formData.countryCode" readonly
+                                        class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 outline-none">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Phone Number *</label>
+                                    <input type="tel" x-model="formData.adminPhone" placeholder="5X XXX XXXX"
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Ready to Launch -->
+                    <div x-show="currentStep === 4" x-transition.opacity.duration.400ms class="space-y-6 text-center">
+                        <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-check-double text-4xl text-green-500"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold tracking-tight">You're All Set!</h2>
+                        <p class="text-gray-600 leading-relaxed">Great job! Your initial configuration is ready. You can
+                            always change these settings later in the <span class="text-[#1E7065] font-bold">Admin
+                                Settings</span> tab.</p>
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-left space-y-3">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Summary</p>
+                            <div class="flex justify-between border-b pb-2 border-gray-200">
+                                <span class="text-sm text-gray-500">Shop:</span>
+                                <span class="text-sm font-bold" x-text="formData.shopName || 'iGrab Story Cafe'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500">Admin:</span>
+                                <span class="text-sm font-bold" x-text="formData.adminName"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="mt-12 flex justify-between items-center bg-white border-t border-gray-50 pt-6">
+                    <button @click="prevStep()" x-show="currentStep > 0 && currentStep < steps.length - 1"
+                        class="px-6 py-3 font-bold text-gray-400 hover:text-gray-600 active:scale-95 transition-all">
+                        Back
+                    </button>
+                    <div x-show="currentStep === 0" class="w-full"></div>
+
+                    <button @click="nextStep()" :disabled="isLoading"
+                        class="px-8 py-4 btn-primary text-white rounded-2xl font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-all"
+                        :class="currentStep === steps.length - 1 ? 'w-full justify-center bg-green-500 hover:bg-green-600' : ''">
+                        <span x-text="getNextButtonLabel()"></span>
+                        <i class="fas fa-arrow-right" x-show="currentStep < steps.length - 1 && !isLoading"></i>
+                        <i class="fas fa-spinner fa-spin" x-show="isLoading"></i>
+                        <i class="fas fa-check" x-show="currentStep === steps.length - 1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setupWizard() {
+            return {
+                currentStep: 0,
+                isLoading: false,
+                steps: ['Start', 'Branding', 'Location', 'Identity', 'Launch'],
+                formData: {
+                    shopName: 'iGrab Story Cafe',
+                    logo: '',
+                    address: {
+                        fullAddress: '',
+                        city: 'Dubai',
+                        country: 'UAE'
+                    },
+                    adminName: '',
+                    adminPhone: '',
+                    countryCode: '+971'
+                },
+                nextStep() {
+                    if (this.currentStep < this.steps.length - 1) {
+                        // Simple validation for each step
+                        if (this.currentStep === 1 && !this.formData.shopName) return alert('Shop Name is required');
+                        if (this.currentStep === 2 && !this.formData.address.fullAddress) return alert('Address is required');
+                        if (this.currentStep === 3) {
+                            if (!this.formData.adminName) return alert('Your Name is required');
+                            if (!this.formData.adminPhone) return alert('Phone Number is required');
+                        }
+                        this.currentStep++;
+                    } else {
+                        this.finishSetup();
+                    }
+                },
+                prevStep() {
+                    if (this.currentStep > 0) this.currentStep--;
+                },
+                getNextButtonLabel() {
+                    if (this.isLoading) return 'Processing...';
+                    if (this.currentStep === 0) return "Let's Begin";
+                    if (this.currentStep === this.steps.length - 1) return "Launch Dashboard";
+                    return "Next Step";
+                },
+                async finishSetup() {
+                    this.isLoading = true;
+                    try {
+                        const response = await fetch('/api/setup', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.formData)
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
+                            window.location.href = '/';
+                        } else {
+                            alert('Something went wrong: ' + result.message);
+                        }
+                    } catch (err) {
+                        alert('Error completing setup. Please try again.');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
