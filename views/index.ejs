@@ -251,6 +251,99 @@
                     box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
                 }
             }
+
+            /* Toast Notifications */
+            #toastContainer {
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                pointer-events: none;
+            }
+
+            .toast {
+                pointer-events: auto;
+                min-width: 300px;
+                max-width: 450px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                padding: 16px;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                transform: translateX(120%);
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                border-left: 4px solid #e5e7eb;
+            }
+
+            .toast.show {
+                transform: translateX(0);
+            }
+
+            .toast.success {
+                border-left-color: #10B981;
+            }
+
+            .toast.error {
+                border-left-color: #EF4444;
+            }
+
+            .toast.warning {
+                border-left-color: #F59E0B;
+            }
+
+            .toast.info {
+                border-left-color: #3B82F6;
+            }
+
+            .toast-icon {
+                flex-shrink: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .toast-content {
+                flex: 1;
+            }
+
+            .toast-title {
+                font-weight: 600;
+                color: #111827;
+                font-size: 0.875rem;
+                margin-bottom: 2px;
+            }
+
+            .toast-message {
+                color: #4B5563;
+                font-size: 0.875rem;
+                line-height: 1.25rem;
+            }
+
+            .toast-message a {
+                color: #1E7065;
+                font-weight: 600;
+                text-decoration: underline;
+                margin-left: 4px;
+            }
+
+            .toast-close {
+                flex-shrink: 0;
+                color: #9CA3AF;
+                cursor: pointer;
+                padding: 2px;
+                transition: color 0.2s;
+            }
+
+            .toast-close:hover {
+                color: #4B5563;
+            }
         </style>
     </head>
 
@@ -426,6 +519,9 @@
             </div>
         </main>
 
+        <!-- Toast Container -->
+        <div id="toastContainer"></div>
+
         <script>
             // State Management
             let dashboardData = {};
@@ -525,6 +621,47 @@
                     } catch (error) {
                         console.error('Alerts API Error:', error);
                         throw error;
+                    }
+                }
+            }
+
+            // Toast Notification Manager
+            class ToastManager {
+                static show(title, message, type = 'success', duration = 5000) {
+                    const container = document.getElementById('toastContainer');
+                    const toast = document.createElement('div');
+                    toast.className = `toast ${type}`;
+
+                    const icons = {
+                        success: '<i class="fas fa-check-circle text-green-500"></i>',
+                        error: '<i class="fas fa-times-circle text-red-500"></i>',
+                        warning: '<i class="fas fa-exclamation-triangle text-yellow-500"></i>',
+                        info: '<i class="fas fa-info-circle text-blue-500"></i>'
+                    };
+
+                    toast.innerHTML = `
+                        <div class="toast-icon">${icons[type] || icons.info}</div>
+                        <div class="toast-content">
+                            <div class="toast-title">${title}</div>
+                            <div class="toast-message">${message}</div>
+                        </div>
+                        <div class="toast-close" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </div>
+                    `;
+
+                    container.appendChild(toast);
+
+                    // Force reflow
+                    toast.offsetHeight;
+
+                    setTimeout(() => toast.classList.add('show'), 100);
+
+                    if (duration > 0) {
+                        setTimeout(() => {
+                            toast.classList.remove('show');
+                            setTimeout(() => toast.remove(), 400);
+                        }, duration);
                     }
                 }
             }
@@ -826,8 +963,8 @@
                 alerts.forEach(alert => {
                     const alertElement = document.createElement('div');
                     alertElement.className = `p-4 rounded-lg border mb-4 ${alert.severity === 'warning' ? 'bg-orange-50 border-orange-200' :
-                            alert.severity === 'error' ? 'bg-red-50 border-red-200' :
-                                'bg-blue-50 border-blue-200'
+                        alert.severity === 'error' ? 'bg-red-50 border-red-200' :
+                            'bg-blue-50 border-blue-200'
                         }`;
 
                     const iconClass = alert.severity === 'warning' ? 'fa-exclamation-triangle text-orange-500' :
@@ -1105,6 +1242,16 @@
                     ChartManager.createBranchPerformanceChart(dashboardData.branchPerformance.branchPerformance);
 
                     UIManager.showDashboard();
+
+                    // Check for zero branch state
+                    if (dashboardData.overview.stats.branches.total === 0) {
+                        ToastManager.show(
+                            'Action Required',
+                            'No store branches found. Please add a branch to enable system features.<a href="/setting">Go to Settings</a>',
+                            'warning',
+                            0 // Don't auto-dismiss
+                        );
+                    }
 
                     // Set up auto refresh
                     startAutoRefresh();

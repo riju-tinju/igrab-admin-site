@@ -54,7 +54,7 @@
 
         <!-- Wizard Card -->
         <div
-            class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 flex flex-col md:flex-row min-h-[500px]">
+            class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 flex flex-col md:flex-row min-h-[550px]">
 
             <!-- Sidebar Navigation (Desktop) -->
             <div class="bg-[#1E7065] md:w-56 p-8 text-white hidden md:block">
@@ -91,65 +91,62 @@
 
                 <div class="flex-1">
                     <!-- Step 0: Welcome -->
-                    <div x-show="currentStep === 0" x-transition.opacity.duration.400ms class="space-y-6">
+                    <div x-show="currentStep === 0" x-transition.opacity.duration.400ms class="space-y-4">
                         <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-4">
                             <i class="fas fa-rocket text-3xl text-[#1E7065]"></i>
                         </div>
                         <h2 class="text-3xl font-bold tracking-tight">Welcome to iGrab!</h2>
                         <p class="text-gray-600 leading-relaxed">Let's get your platform ready for business. This setup
-                            takes less than 2 minutes and will help us configure your shop correctly.</p>
+                            takes less than 2 minutes and will help us configure your first branch correctly.</p>
                         <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 items-start">
                             <i class="fas fa-info-circle text-amber-500 mt-1"></i>
                             <p class="text-xs text-amber-800 leading-normal">You're currently logged in as a
-                                <strong>System Admin</strong>. We'll help you personalize your profile in a few steps.
+                                <strong>System Admin</strong>. We'll help you personalization your profile in a few
+                                steps.
                             </p>
                         </div>
                     </div>
 
-                    <!-- Step 1: Branding -->
-                    <div x-show="currentStep === 1" x-transition.opacity.duration.400ms class="space-y-6">
-                        <h2 class="text-2xl font-bold tracking-tight">Shop Branding</h2>
+                    <!-- Step 1: Branch Details (Name & Location) -->
+                    <div x-show="currentStep === 1" x-transition.opacity.duration.400ms class="space-y-4">
+                        <h2 class="text-2xl font-bold tracking-tight">Main Branch Details</h2>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Shop Name *</label>
-                                <input type="text" x-model="formData.shopName" placeholder="iGrab Story Cafe"
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Branch Name *</label>
+                                <input type="text" x-model="formData.branchName" placeholder="e.g. iGrab Story Cafe"
                                     class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all">
                             </div>
+
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Logo URL (Optional)</label>
-                                <input type="text" x-model="formData.logo" placeholder="https://example.com/logo.png"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Location on Map *</label>
+                                <div class="relative mb-2">
+                                    <input type="text" id="mapSearch" placeholder="Search for your branch location..."
+                                        class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1E7065] outline-none">
+                                    <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                                </div>
+                                <div id="setupMap"
+                                    class="w-full h-48 bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+                                </div>
+                                <div class="mt-2 flex gap-4">
+                                    <div class="flex-1">
+                                        <label
+                                            class="block text-[10px] uppercase font-bold text-gray-400">Latitude</label>
+                                        <input type="text" x-model="formData.latitude" readonly
+                                            class="w-full text-xs bg-gray-50 border-none p-0 text-gray-500">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label
+                                            class="block text-[10px] uppercase font-bold text-gray-400">Longitude</label>
+                                        <input type="text" x-model="formData.longitude" readonly
+                                            class="w-full text-xs bg-gray-50 border-none p-0 text-gray-500">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 2: Store Location -->
+                    <!-- Step 2: Admin Identity -->
                     <div x-show="currentStep === 2" x-transition.opacity.duration.400ms class="space-y-6">
-                        <h2 class="text-2xl font-bold tracking-tight">Main Branch Location</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Primary Address *</label>
-                                <textarea x-model="formData.address.fullAddress"
-                                    placeholder="e.g. Al-Quoz 3, Dubai, UAE"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E7065] focus:bg-white outline-none transition-all resize-none h-24"></textarea>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Emirate/City</label>
-                                    <input type="text" x-model="formData.address.city"
-                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#1E7065] outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Country</label>
-                                    <input type="text" x-model="formData.address.country" readonly
-                                        class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 outline-none">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Admin Identity -->
-                    <div x-show="currentStep === 3" x-transition.opacity.duration.400ms class="space-y-6">
                         <h2 class="text-2xl font-bold tracking-tight">Admin Profile</h2>
                         <p class="text-sm text-gray-500">Update the default system credentials to yours.</p>
                         <div class="space-y-4">
@@ -173,8 +170,8 @@
                         </div>
                     </div>
 
-                    <!-- Step 4: Ready to Launch -->
-                    <div x-show="currentStep === 4" x-transition.opacity.duration.400ms class="space-y-6 text-center">
+                    <!-- Step 3: Ready to Launch -->
+                    <div x-show="currentStep === 3" x-transition.opacity.duration.400ms class="space-y-6 text-center">
                         <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-check-double text-4xl text-green-500"></i>
                         </div>
@@ -185,8 +182,8 @@
                         <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-left space-y-3">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Summary</p>
                             <div class="flex justify-between border-b pb-2 border-gray-200">
-                                <span class="text-sm text-gray-500">Shop:</span>
-                                <span class="text-sm font-bold" x-text="formData.shopName || 'iGrab Story Cafe'"></span>
+                                <span class="text-sm text-gray-500">Branch:</span>
+                                <span class="text-sm font-bold" x-text="formData.branchName || 'Main Branch'"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-500">Admin:</span>
@@ -197,7 +194,7 @@
                 </div>
 
                 <!-- Navigation Buttons -->
-                <div class="mt-12 flex justify-between items-center bg-white border-t border-gray-50 pt-6">
+                <div class="mt-8 flex justify-between items-center bg-white border-t border-gray-50 pt-6">
                     <button @click="prevStep()" x-show="currentStep > 0 && currentStep < steps.length - 1"
                         class="px-6 py-3 font-bold text-gray-400 hover:text-gray-600 active:scale-95 transition-all">
                         Back
@@ -218,33 +215,92 @@
     </div>
 
     <script>
+        let setupMap, setupMarker;
+
+        function initSetupMap() {
+            const defaultLoc = { lat: 25.2048, lng: 55.2708 }; // Dubai
+            setupMap = new google.maps.Map(document.getElementById("setupMap"), {
+                zoom: 12,
+                center: defaultLoc,
+                disableDefaultUI: true,
+                zoomControl: true
+            });
+
+            setupMarker = new google.maps.Marker({
+                position: defaultLoc,
+                map: setupMap,
+                draggable: true
+            });
+
+            // Update coords on drag
+            google.maps.event.addListener(setupMarker, 'dragend', function () {
+                const pos = setupMarker.getPosition();
+                window.dispatchEvent(new CustomEvent('map-pos-updated', { detail: { lat: pos.lat(), lng: pos.lng() } }));
+            });
+
+            // Update coords on click
+            setupMap.addListener('click', function (e) {
+                setupMarker.setPosition(e.latLng);
+                window.dispatchEvent(new CustomEvent('map-pos-updated', { detail: { lat: e.latLng.lat(), lng: e.latLng.lng() } }));
+            });
+
+            // Search Box
+            const input = document.getElementById("mapSearch");
+            const searchBox = new google.maps.places.SearchBox(input);
+
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+                if (places.length === 0) return;
+                const place = places[0];
+                if (!place.geometry || !place.geometry.location) return;
+
+                setupMarker.setPosition(place.geometry.location);
+                setupMap.setCenter(place.geometry.location);
+                setupMap.setZoom(16);
+                window.dispatchEvent(new CustomEvent('map-pos-updated', { detail: { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() } }));
+            });
+        }
+
         function setupWizard() {
             return {
                 currentStep: 0,
                 isLoading: false,
-                steps: ['Start', 'Branding', 'Location', 'Identity', 'Launch'],
+                steps: ['Welcome', 'Branch', 'Admin', 'Launch'],
                 formData: {
-                    shopName: 'iGrab Story Cafe',
-                    logo: '',
-                    address: {
-                        fullAddress: '',
-                        city: 'Dubai',
-                        country: 'UAE'
-                    },
+                    branchName: 'iGrab Story Cafe',
+                    latitude: 25.2048,
+                    longitude: 55.2708,
                     adminName: '',
                     adminPhone: '',
                     countryCode: '+971'
                 },
+                init() {
+                    window.addEventListener('map-pos-updated', (e) => {
+                        this.formData.latitude = e.detail.lat.toFixed(6);
+                        this.formData.longitude = e.detail.lng.toFixed(6);
+                    });
+                },
                 nextStep() {
                     if (this.currentStep < this.steps.length - 1) {
                         // Simple validation for each step
-                        if (this.currentStep === 1 && !this.formData.shopName) return alert('Shop Name is required');
-                        if (this.currentStep === 2 && !this.formData.address.fullAddress) return alert('Address is required');
-                        if (this.currentStep === 3) {
+                        if (this.currentStep === 1) {
+                            if (!this.formData.branchName) return alert('Branch Name is required');
+                        }
+                        if (this.currentStep === 2) {
                             if (!this.formData.adminName) return alert('Your Name is required');
                             if (!this.formData.adminPhone) return alert('Phone Number is required');
                         }
+
                         this.currentStep++;
+
+                        // Initialize map if we move to step 1
+                        if (this.currentStep === 1) {
+                            setTimeout(() => {
+                                if (typeof google !== 'undefined') {
+                                    initSetupMap();
+                                }
+                            }, 100);
+                        }
                     } else {
                         this.finishSetup();
                     }
@@ -282,6 +338,9 @@
             }
         }
     </script>
+
+    <!-- Load Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&libraries=places"></script>
 
 </body>
 

@@ -126,7 +126,18 @@ const settingHelper = {
     },
     getBranches: async (req, res) => {
         try {
-            const branches = await Store.find({});
+            const adminId = req.session.admin.id;
+            const admin = await Admin.findById(adminId);
+            if (!admin) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+            let branches;
+            if (admin.role === "superadmin") {
+                branches = await Store.find({});
+            } else {
+                branches = await Store.find({
+                    _id: { $in: admin.branches || [] },
+                });
+            }
 
             const formattedBranches = branches.map(branch => ({
                 _id: branch._id,
@@ -134,6 +145,9 @@ const settingHelper = {
                 address: branch.address,
                 phone: branch.contactNumber || "",
                 email: branch.email || "",
+                openingHours: branch.openingHours || "",
+                instagramLink: branch.instagramLink || "",
+                googleMapSrc: branch.googleMapSrc || "",
                 isActive: branch.isActive,
                 location: branch.location,
                 createdAt: branch.createdAt
@@ -155,7 +169,7 @@ const settingHelper = {
     },
     createBranch: async (req, res) => {
         try {
-            const { name, email, address, contactNumber, latitude, longitude } = req.body;
+            const { name, email, address, contactNumber, latitude, longitude, openingHours, instagramLink, googleMapSrc } = req.body;
 
             // Basic validation
             if (!name || !address) {
@@ -174,6 +188,9 @@ const settingHelper = {
                     type: "Point",
                     coordinates: [parseFloat(longitude), parseFloat(latitude)]
                 } : undefined,
+                openingHours: openingHours || "",
+                instagramLink: instagramLink || "",
+                googleMapSrc: googleMapSrc || "",
                 isActive: true
             });
 
@@ -188,6 +205,9 @@ const settingHelper = {
                     address: savedBranch.address,
                     phone: savedBranch.contactNumber || "",
                     email: savedBranch.email || "",
+                    openingHours: savedBranch.openingHours || "",
+                    instagramLink: savedBranch.instagramLink || "",
+                    googleMapSrc: savedBranch.googleMapSrc || "",
                     isActive: savedBranch.isActive,
                     location: savedBranch.location,
                     createdAt: savedBranch.createdAt
@@ -204,7 +224,7 @@ const settingHelper = {
     editBranch: async (req, res) => {
         try {
             const branchId = req.params.id;
-            const { name, email, address, contactNumber, isActive, latitude, longitude } = req.body;
+            const { name, email, address, contactNumber, isActive, latitude, longitude, openingHours, instagramLink, googleMapSrc } = req.body;
 
             const updatedData = {};
 
@@ -212,6 +232,9 @@ const settingHelper = {
             if (email !== undefined) updatedData.email = email;
             if (address !== undefined) updatedData.address = address;
             if (contactNumber !== undefined) updatedData.contactNumber = contactNumber;
+            if (openingHours !== undefined) updatedData.openingHours = openingHours;
+            if (instagramLink !== undefined) updatedData.instagramLink = instagramLink;
+            if (googleMapSrc !== undefined) updatedData.googleMapSrc = googleMapSrc;
             if (isActive !== undefined) updatedData.isActive = isActive;
 
             if (latitude !== undefined && longitude !== undefined) {
@@ -288,32 +311,22 @@ const settingHelper = {
     },
     getPayment: async (req, res) => {
         try {
-            const config = await PaymentConfiguration.findOne();
-            // console.log('payment configure:\n\n', config)
-            //   if (!config) {
-            //     return res.status(404).json({
-            //       success: false,
-            //       message: "Payment configuration not found"
-            //     });
-            //   }
+            const { branchId } = req.query;
+            if (!branchId) {
+                return res.status(400).json({ success: false, message: "Branch ID is required" });
+            }
+
+            const branch = await Store.findById(branchId);
+            if (!branch) {
+                return res.status(404).json({ success: false, message: "Branch not found" });
+            }
 
             return res.status(200).json({
                 success: true,
-                data: config || {
-                    stripe: {
-                        publishableKey: '',
-                        secretKey: '',
-                        webhookSecret: '',
-                        isEnabled: false
-                    },
-                    wallet: {
-                        isEnabled: false
-                    },
-                    cod: {
-                        isEnabled: false
-                    }
-
-
+                data: branch.paymentConfig || {
+                    stripe: { publishableKey: '', secretKey: '', webhookSecret: '', isEnabled: false },
+                    wallet: { isEnabled: false },
+                    cod: { isEnabled: false }
                 }
             });
         } catch (err) {
@@ -325,7 +338,11 @@ const settingHelper = {
     },
     editPayment: async (req, res) => {
         try {
-            const { stripe, cod, wallet } = req.body;
+            const { branchId, stripe, cod, wallet } = req.body;
+
+            if (!branchId) {
+                return res.status(400).json({ success: false, message: "Branch ID is required" });
+            }
 
             // Stripe key validation if enabling Stripe
             if (stripe?.isEnabled) {
@@ -337,32 +354,28 @@ const settingHelper = {
                 }
             }
 
-            const updateData = {
+            const branch = await Store.findById(branchId);
+            if (!branch) {
+                return res.status(404).json({ success: false, message: "Branch not found" });
+            }
+
+            branch.paymentConfig = {
                 stripe: {
                     publishableKey: stripe.publishableKey || "",
                     secretKey: stripe.secretKey || "",
                     webhookSecret: stripe.webhookSecret || "",
                     isEnabled: stripe.isEnabled
                 },
-                cod: {
-                    isEnabled: cod?.isEnabled ?? false
-                },
-                wallet: {
-                    isEnabled: wallet?.isEnabled ?? false
-                }
+                cod: { isEnabled: cod?.isEnabled ?? false },
+                wallet: { isEnabled: wallet?.isEnabled ?? false }
             };
 
-            // Update the first found config or create new if none exists
-            const updatedConfig = await PaymentConfiguration.findOneAndUpdate(
-                {},
-                { $set: updateData },
-                { new: true, upsert: true }
-            );
+            await branch.save();
 
             return res.status(200).json({
                 success: true,
                 message: "Payment configuration updated successfully",
-                data: updatedConfig
+                data: branch.paymentConfig
             });
 
         } catch (err) {
@@ -442,13 +455,19 @@ const settingHelper = {
     },
     getCharges: async (req, res) => {
         try {
-            const charges = await Charges.find({});
-            // console.log(charges)
+            const { branchId } = req.query;
+            if (!branchId) {
+                return res.status(400).json({ success: false, message: "Branch ID is required" });
+            }
+
+            const branch = await Store.findById(branchId);
+            if (!branch) {
+                return res.status(404).json({ success: false, message: "Branch not found" });
+            }
+
             res.status(200).json({
                 success: true,
-                data: {
-                    charges
-                },
+                data: { charges: branch.extraCharges || [] },
             });
         } catch (err) {
             console.error("Error in getCharges:", err);
@@ -460,28 +479,36 @@ const settingHelper = {
     },
     createCharge: async (req, res) => {
         try {
-            const { name, type } = req.body;
+            const { branchId, name, type } = req.body;
 
-            if (!name || !type?.name || type.value === undefined) {
+            if (!branchId || !name || !type?.name || type.value === undefined || isNaN(type.value)) {
                 return res.status(400).json({
                     success: false,
-                    message: "Missing required fields: name, type.name, or type.value",
+                    message: "Missing or invalid required fields: branchId, name, type.name, or type.value",
                 });
             }
 
-            if (!["percentage", "number"].includes(type.name)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid type name. Allowed values: 'percentage' or 'number'",
-                });
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
+            if (!Array.isArray(branch.extraCharges)) {
+                branch.extraCharges = [];
             }
 
-            const newCharge = new Charges({ name, type });
-            const savedCharge = await newCharge.save();
+            const newCharge = {
+                name,
+                chargeConfig: {
+                    chargeMethod: type.name,
+                    value: parseFloat(type.value)
+                },
+                isActive: true
+            };
+            branch.extraCharges.push(newCharge);
+            await branch.save();
 
             res.status(201).json({
                 success: true,
-                data: savedCharge,
+                data: branch.extraCharges[branch.extraCharges.length - 1],
                 message: "Charge created successfully",
             });
         } catch (err) {
@@ -489,44 +516,37 @@ const settingHelper = {
             res.status(500).json({
                 success: false,
                 message: "An error occurred while creating the charge",
+                error: err.message
             });
         }
     },
     editCharge: async (req, res) => {
         try {
+            const { branchId, name, type, isActive } = req.body;
             const chargeId = req.params.id;
-            const { name, type } = req.body;
 
-            if (!name || !type?.name || type.value === undefined) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Missing required fields: name, type.name, or type.value",
-                });
+            if (!branchId) return res.status(400).json({ success: false, message: "Branch ID is required" });
+
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
+            const charge = branch.extraCharges.id(chargeId);
+            if (!charge) return res.status(404).json({ success: false, message: "Charge not found" });
+
+            if (name) charge.name = name;
+            if (type) {
+                charge.chargeConfig = {
+                    chargeMethod: type.name || charge.chargeConfig.chargeMethod,
+                    value: type.value !== undefined ? parseFloat(type.value) : charge.chargeConfig.value
+                };
             }
+            if (isActive !== undefined) charge.isActive = isActive;
 
-            if (!["percentage", "number"].includes(type.name)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid type name. Allowed values: 'percentage' or 'number'",
-                });
-            }
-
-            const updatedCharge = await Charges.findByIdAndUpdate(
-                chargeId,
-                { name, type },
-                { new: true }
-            );
-
-            if (!updatedCharge) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Charge not found",
-                });
-            }
+            await branch.save();
 
             res.status(200).json({
                 success: true,
-                data: updatedCharge,
+                data: charge,
                 message: "Charge updated successfully",
             });
         } catch (err) {
@@ -534,21 +554,22 @@ const settingHelper = {
             res.status(500).json({
                 success: false,
                 message: "An error occurred while updating the charge",
+                error: err.message
             });
         }
     },
     deleteCharge: async (req, res) => {
         try {
             const chargeId = req.params.id;
+            const { branchId } = req.query;
 
-            const deleted = await Charges.findByIdAndDelete(chargeId);
+            if (!branchId) return res.status(400).json({ success: false, message: "Branch ID is required" });
 
-            if (!deleted) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Charge not found",
-                });
-            }
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
+            branch.extraCharges.pull(chargeId);
+            await branch.save();
 
             res.status(200).json({
                 success: true,
@@ -565,12 +586,15 @@ const settingHelper = {
 
     getDeliveryCharges: async (req, res) => {
         try {
-            const charges = await DeliveryCharge.find({});
+            const { branchId } = req.query;
+            if (!branchId) return res.status(400).json({ success: false, message: "Branch ID is required" });
+
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
             return res.status(200).json({
                 success: true,
-                data: {
-                    charges
-                }
+                data: { charges: branch.deliveryCharges || [] }
             });
         } catch (err) {
             console.error("Error in getDeliveryCharges:", err);
@@ -583,38 +607,39 @@ const settingHelper = {
 
     createDeliveryCharge: async (req, res) => {
         try {
-            const { emirate, chargeType, fixedCharge, distanceCharge } = req.body;
+            const { branchId, emirate, chargeType, fixedCharge, distanceCharge } = req.body;
 
-            // Validation
-            if (!emirate || !chargeType) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Emirate and Charge Type are required."
-                });
+            if (!branchId || !emirate || !chargeType) {
+                return res.status(400).json({ success: false, message: "branchId, emirate and chargeType are required." });
             }
 
-            // Check for existing charge for this Emirate
-            const existing = await DeliveryCharge.findOne({ emirate });
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
+            // Check if already exists for this emirate in this branch
+            const existing = branch.deliveryCharges.find(c => c.emirate === emirate);
             if (existing) {
                 return res.status(400).json({
                     success: false,
-                    message: `Delivery charge configuration already exists for ${emirate}. Please edit the existing one.`
+                    message: `Delivery charge configuration already exists for ${emirate} in this branch.`
                 });
             }
 
-            const newCharge = new DeliveryCharge({
+            const newCharge = {
                 emirate,
                 chargeType,
                 fixedCharge: chargeType === 'fixed' ? fixedCharge : 0,
-                distanceCharge: chargeType === 'distance' ? distanceCharge : {}
-            });
+                distanceCharge: chargeType === 'distance' ? distanceCharge : { baseDistance: 10, baseCost: 0, extraCostPerKm: 0 },
+                isActive: true
+            };
 
-            await newCharge.save();
+            branch.deliveryCharges.push(newCharge);
+            await branch.save();
 
             return res.status(201).json({
                 success: true,
                 message: "Delivery charge created successfully",
-                data: newCharge
+                data: branch.deliveryCharges[branch.deliveryCharges.length - 1]
             });
 
         } catch (err) {
@@ -629,39 +654,32 @@ const settingHelper = {
     editDeliveryCharge: async (req, res) => {
         try {
             const chargeId = req.params.id;
-            const { emirate, chargeType, fixedCharge, distanceCharge, isActive } = req.body;
+            const { branchId, emirate, chargeType, fixedCharge, distanceCharge, isActive } = req.body;
 
-            const updateData = {
-                emirate,
-                chargeType,
-                isActive
-            };
+            if (!branchId) return res.status(400).json({ success: false, message: "Branch ID is required" });
+
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
+            const charge = branch.deliveryCharges.id(chargeId);
+            if (!charge) return res.status(404).json({ success: false, message: "Delivery charge not found" });
+
+            if (emirate) charge.emirate = emirate;
+            if (chargeType) charge.chargeType = chargeType;
+            if (isActive !== undefined) charge.isActive = isActive;
 
             if (chargeType === 'fixed') {
-                updateData.fixedCharge = fixedCharge;
-                // Optional: reset distanceCharge or keep it
+                charge.fixedCharge = fixedCharge;
             } else if (chargeType === 'distance') {
-                updateData.distanceCharge = distanceCharge;
-                // Optional: reset fixedCharge
+                charge.distanceCharge = distanceCharge;
             }
 
-            const updatedCharge = await DeliveryCharge.findByIdAndUpdate(
-                chargeId,
-                { $set: updateData },
-                { new: true }
-            );
-
-            if (!updatedCharge) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Delivery charge not found"
-                });
-            }
+            await branch.save();
 
             return res.status(200).json({
                 success: true,
                 message: "Delivery charge updated successfully",
-                data: updatedCharge
+                data: charge
             });
 
         } catch (err) {
@@ -676,14 +694,15 @@ const settingHelper = {
     deleteDeliveryCharge: async (req, res) => {
         try {
             const chargeId = req.params.id;
-            const deleted = await DeliveryCharge.findByIdAndDelete(chargeId);
+            const { branchId } = req.query;
 
-            if (!deleted) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Delivery charge not found"
-                });
-            }
+            if (!branchId) return res.status(400).json({ success: false, message: "Branch ID is required" });
+
+            const branch = await Store.findById(branchId);
+            if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
+
+            branch.deliveryCharges.pull(chargeId);
+            await branch.save();
 
             return res.status(200).json({
                 success: true,

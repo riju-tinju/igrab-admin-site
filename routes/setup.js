@@ -21,47 +21,50 @@ router.get('/setup', asyncHandler(async (req, res) => {
 
 // POST Setup Data
 router.post('/api/setup', asyncHandler(async (req, res) => {
-    const { shopName, logo, address, adminName, adminPhone, countryCode } = req.body;
+    const { branchName, latitude, longitude, adminName, adminPhone, countryCode } = req.body;
 
     // 1. Update/Create Settings
     let settings = await Setting.findOne();
     if (!settings) {
         settings = new Setting({
-            businessName: shopName,
-            logo: logo || "",
+            businessName: branchName || "iGrab Story",
+            logo: "",
             phone: adminPhone,
-            email: "admin@igrab.com", // Fallback email
+            email: "admin@igrab.com",
             currency: "AED",
             address: {
-                street: address.street || "Main St",
-                city: address.city || "Dubai",
-                country: address.country || "UAE"
+                street: "Main St",
+                city: "Dubai",
+                country: "UAE"
             }
         });
     } else {
-        settings.businessName = shopName;
-        settings.logo = logo || settings.logo;
-        settings.isSetupComplete = true;
+        settings.businessName = branchName || settings.businessName;
     }
     settings.isSetupComplete = true;
     await settings.save();
 
     // 2. Update/Create Primary Branch
-    let branch = await StoreBranch.findOne({ name: "Main Branch" });
+    // We try to find any existing branch or create a new one
+    let branch = await StoreBranch.findOne();
     if (!branch) {
         branch = new StoreBranch({
-            name: "Main Branch",
-            address: address.fullAddress || "Dubai, UAE",
+            name: branchName || "Main Branch",
+            address: "Contact for address", // Placeholder as requested to keep fields essential
             email: "main@igrab.com",
             contactNumber: adminPhone,
             location: {
                 type: "Point",
-                coordinates: [req.body.longitude || 55.2708, req.body.latitude || 25.2048]
+                coordinates: [parseFloat(longitude) || 55.2708, parseFloat(latitude) || 25.2048]
             }
         });
     } else {
-        branch.address = address.fullAddress || branch.address;
+        branch.name = branchName || branch.name;
         branch.contactNumber = adminPhone;
+        branch.location = {
+            type: "Point",
+            coordinates: [parseFloat(longitude) || 55.2708, parseFloat(latitude) || 25.2048]
+        };
     }
     await branch.save();
 

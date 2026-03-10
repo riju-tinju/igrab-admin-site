@@ -19,6 +19,7 @@ const verifyAdmin = async (req, res, next) => {
     }
 
     if (req.session.admin && req.session.admin.id) {
+      console.log(req.session.admin);
       return next(); // Authenticated user
     }
 

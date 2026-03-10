@@ -3,6 +3,7 @@ const User = require("../model/userSchema");
 const verifySuperAdmin = async (req, res, next) => {
   try {
     if (req.session.admin && req.session.admin.role === 'superadmin') {
+      
       return next(); // Authenticated user
     }
 

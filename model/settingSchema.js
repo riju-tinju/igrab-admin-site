@@ -45,7 +45,8 @@ const settingSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function (v) {
-        // Basic URL validation
+        // Allow empty string if not required, otherwise validate URL
+        if (!v) return true;
         return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(v);
       },
       message: props => `${props.value} is not a valid URL for the logo!`
