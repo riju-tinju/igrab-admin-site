@@ -136,7 +136,7 @@ app.use(
     store: MongoStore.create({
       mongoUrl: `mongodb://localhost:27017/${process.env.DB_NAME || 'iGrab_DB'}`,
       collectionName: 'admin_sessions',
-      ttl: 30 * 24 * 60 * 60, // 30 days in seconds
+      ttl: 60 * 24 * 60 * 60, // 60 days in seconds
       autoRemove: 'native', // Let MongoDB handle expired session cleanup
       touchAfter: 24 * 3600, // Lazy session update - update session once per 24 hours
       crypto: {
@@ -144,7 +144,7 @@ app.use(
       }
     }),
     cookie: {
-      maxAge: 14 * 24 * 60 * 60 * 1000,
+      maxAge: 60 * 24 * 60 * 60 * 1000, // 60 days
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false',
       sameSite: 'lax'
