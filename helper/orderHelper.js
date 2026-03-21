@@ -10,6 +10,7 @@ const Charges = require("../model/chargingSchema");
 const Store = require("../model/storeBranchSchema");
 const Order = require("../model/orderSchema");
 const DeliveryExecutive = require("../model/deliveryExecutiveSchema")
+const { sendOrderStatusNotification } = require("./notificationService");
 
 
 const path = require("path");
@@ -251,6 +252,11 @@ const orderFun = {
         });
       }
 
+      // Fetch full order for notification (asynchronously)
+      Order.findById(id).then(fullOrder => {
+        if (fullOrder) sendOrderStatusNotification(fullOrder);
+      }).catch(err => console.error("Error fetching order for notification:", err));
+
       return res.status(200).json({
         success: true,
         message: "Order status updated successfully",
@@ -346,6 +352,13 @@ const orderFun = {
 
       const refreshedOrders = await Order.find({ _id: { $in: orderIds } }).select("_id status paymentStatus updatedAt");
 
+      // Send notifications for all updated orders
+      updatedOrders.forEach(order => {
+        // Update the status in memory to match the new status
+        order.status = updates.status; 
+        sendOrderStatusNotification(order);
+      });
+
       return res.status(200).json({
         success: true,
         message: `${refreshedOrders.length} orders updated successfully`,
@@ -439,7 +452,7 @@ const orderFun = {
           .join(", ");
 
         const items = order.orderItems
-          .map(i => `${i.name} (x${i.qty})`)
+          .map(i => `${i.name.en || 'Unknown'} (x${i.qty})`)
           .join("; ");
 
         // Calculate distance

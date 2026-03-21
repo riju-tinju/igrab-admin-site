@@ -1192,7 +1192,7 @@
             row.dataset.orderId = order._id;
 
             const orderItems = order.orderItems || [];
-            const itemsPreview = orderItems.slice(0, 2).map(item => `${item.name} (${item.qty})`).join(', ');
+            const itemsPreview = orderItems.slice(0, 2).map(item => `${item.name.en || 'Unknown'} (${item.qty})`).join(', ');
             const remainingItems = orderItems.length > 2 ? ` +${orderItems.length - 2} more` : '';
             const isaDeliveryAssigned = order.deliveryExecutive && order.deliveryExecutive.assigned ? true : false;
             const deliveryBoyIdQuery = isaDeliveryAssigned ? `deliveryExecutive='${order.deliveryExecutive.id}'` : '';
@@ -1295,7 +1295,7 @@
 
             const orderItems = order.orderItems || [];
             const itemsPreview = orderItems.slice(0, 3).map(item =>
-              `<span class="order-item-badge">${item.name} (${item.qty})</span>`
+              `<span class="order-item-badge">${item.name.en || 'Unknown'} (${item.qty})</span>`
             ).join('');
             const remainingItems = orderItems.length > 3 ? `<span class="order-item-badge">+${orderItems.length - 3} more</span>` : '';
 

@@ -39,3 +39,6 @@ public/exports/*
 # IDE Configs
 .vscode/
 .idea/
+
+# Firebase configuration
+config/firebase-service-account.json

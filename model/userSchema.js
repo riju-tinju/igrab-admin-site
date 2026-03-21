@@ -107,6 +107,13 @@ const UserSchema = new Schema({
       },
     },
   ],
+  fcmTokens: [
+    {
+      token: { type: String, required: true },
+      platform: { type: String },
+      lastUsed: { type: Date, default: Date.now }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

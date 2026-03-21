@@ -130,6 +130,7 @@ if (!process.env.SESSION_SECRET) {
 
 app.use(
   session({
+    name: 'igrab_admin_sid',
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
