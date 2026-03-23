@@ -33,19 +33,32 @@ adminHelper.ensureInitialData();
 
 // One-time Migration for FCM Tokens to standalone DeviceToken collection
 const migrateTokens = async () => {
+  console.log('[Migration] Starting migrateTokens function...');
   try {
     const User = require('./model/userSchema');
     const DeviceToken = require('./model/deviceTokenSchema');
     
-    // Check if we are connected first
+    console.log('[Migration] Current Mongoose state:', mongoose.connection.readyState);
+    
+    // Check if we are connected first (0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting)
     if (mongoose.connection.readyState !== 1) {
-      console.log('[Migration] Waiting for MongoDB connection before starting migration...');
+      console.log('[Migration] Waiting for MongoDB connection...');
       await new Promise((resolve) => {
-        mongoose.connection.once('open', resolve);
+        mongoose.connection.once('open', () => {
+          console.log('[Migration] MongoDB connection opened!');
+          resolve();
+        });
+        // Also timeout after 10s so we don't hang forever
+        setTimeout(() => {
+          console.log('[Migration] Connection wait timed out.');
+          resolve();
+        }, 10000);
       });
     }
 
+    console.log('[Migration] Fetching users with tokens...');
     const usersWithTokens = await User.find({ "fcmTokens.0": { $exists: true } });
+    console.log(`[Migration] Found ${usersWithTokens.length} users with legacy tokens.`);
     console.log(`[Migration] Found ${usersWithTokens.length} users with legacy tokens.`);
     
     let migratedCount = 0;
