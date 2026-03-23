@@ -36,6 +36,14 @@ const migrateTokens = async () => {
     const User = require('./model/userSchema');
     const DeviceToken = require('./model/deviceTokenSchema');
     
+    // Check if we are connected first
+    if (mongoose.connection.readyState !== 1) {
+      console.log('[Migration] Waiting for MongoDB connection before starting migration...');
+      await new Promise((resolve) => {
+        mongoose.connection.once('open', resolve);
+      });
+    }
+
     const usersWithTokens = await User.find({ "fcmTokens.0": { $exists: true } });
     console.log(`[Migration] Found ${usersWithTokens.length} users with legacy tokens.`);
     
