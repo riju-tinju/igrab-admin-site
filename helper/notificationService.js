@@ -1,7 +1,5 @@
-const admin = require('firebase-admin');
-const path = require('path');
-const fs = require('fs');
 const User = require('../model/userSchema');
+const DeviceToken = require('../model/deviceTokenSchema');
 
 let isInitialized = false;
 
@@ -131,7 +129,62 @@ const sendOrderStatusNotification = async (order) => {
     }
 };
 
+const sendBroadcastNotification = async (title, body, data = {}) => {
+    if (!initializeFirebase()) return;
+
+    try {
+        const deviceTokens = await DeviceToken.find().select('token');
+        if (!deviceTokens || deviceTokens.length === 0) {
+            console.log('[FCM] No tokens found for broadcast.');
+            return { success: false, message: 'No devices registered' };
+        }
+
+        const tokens = deviceTokens.map(t => t.token);
+        console.log(`[FCM] Sending broadcast push to ${tokens.length} devices. Title: "${title}"`);
+
+        const message = {
+            notification: {
+                title,
+                body
+            },
+            data: {
+                ...data,
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                type: 'BROADCAST'
+            },
+            tokens: tokens
+        };
+
+        const response = await admin.messaging().sendEachForMulticast(message);
+        console.log(`[FCM] Broadcast sent. Success: ${response.successCount}, Failure: ${response.failureCount}`);
+
+        // Cleanup invalid tokens
+        if (response.failureCount > 0) {
+            const failedTokens = [];
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    const error = resp.error.code;
+                    if (error === 'messaging/registration-token-not-registered' || 
+                        error === 'messaging/invalid-registration-token') {
+                        failedTokens.push(tokens[idx]);
+                    }
+                }
+            });
+
+            if (failedTokens.length > 0) {
+                console.log(`[FCM] Removing ${failedTokens.length} invalid tokens from broadcast list`);
+                await DeviceToken.deleteMany({ token: { $in: failedTokens } });
+            }
+        }
+        return { success: true, successCount: response.successCount, failureCount: response.failureCount };
+    } catch (error) {
+        console.error('Error sending broadcast push notification:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
     sendPushToUser,
-    sendOrderStatusNotification
+    sendOrderStatusNotification,
+    sendBroadcastNotification
 };

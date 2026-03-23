@@ -31,4 +31,15 @@ router.post('/api/logout', asyncHandler(async function (req, res, next) {
     return res.status(200).json({ success: true, message: "Logged out successfully" });
 }));
 
+const notificationService = require('../helper/notificationService');
+
+router.post('/api/admin/notifications/broadcast', asyncHandler(async function (req, res, next) {
+    const { title, body } = req.body;
+    if (!title || !body) {
+        return res.status(400).json({ success: false, message: 'Title and body are required' });
+    }
+    const result = await notificationService.sendBroadcastNotification(title, body);
+    return res.status(200).json(result);
+}));
+
 module.exports = router;

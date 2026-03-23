@@ -462,6 +462,23 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Test Push Notification (NEW) -->
+                    <div class="kpi-card fade-in border-yellow-400 bg-yellow-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 mb-1">System Test</p>
+                                <h3 class="text-lg font-bold text-gray-900">Push Notification</h3>
+                                <button id="broadcastTestBtn" 
+                                    class="mt-3 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold py-2 px-4 rounded-full transition-all shadow-md active:scale-95">
+                                    <i class="fas fa-paper-plane mr-2"></i>Send Test to All
+                                </button>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center border-2 border-yellow-200">
+                                <i class="fas fa-bell text-yellow-700 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Charts Row 1 -->
@@ -1297,6 +1314,42 @@
 
                 // Retry button
                 document.getElementById('retryBtn').addEventListener('click', loadDashboard);
+
+                // Broadcast Notification Handler
+                document.getElementById('broadcastTestBtn')?.addEventListener('click', async () => {
+                    const title = prompt("Enter Notification Title:", "System Test");
+                    const body = prompt("Enter Notification Message:", "This is a test notification for all users.");
+                    
+                    if (!title || !body) return;
+
+                    try {
+                        const btn = document.getElementById('broadcastTestBtn');
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+
+                        const response = await fetch('/api/admin/notifications/broadcast', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ title, body })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            ToastManager.show('Success', `Broadcast sent to ${result.successCount} devices!`, 'success');
+                        } else {
+                            ToastManager.show('Error', result.message || 'Failed to send broadcast', 'error');
+                        }
+                    } catch (error) {
+                        ToastManager.show('Error', 'An error occurred while sending broadcast', 'error');
+                    } finally {
+                        const btn = document.getElementById('broadcastTestBtn');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Test to All';
+                        }
+                    }
+                });
 
                 // Cleanup on page unload
                 window.addEventListener('beforeunload', function () {
