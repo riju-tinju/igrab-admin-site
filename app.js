@@ -30,6 +30,39 @@ db.DBconnect();
 const adminHelper = require("./helper/adminHelper");
 adminHelper.ensureInitialData();
 
+// One-time Migration for FCM Tokens to standalone DeviceToken collection
+const migrateTokens = async () => {
+  try {
+    const User = require('./model/userSchema');
+    const DeviceToken = require('./model/deviceTokenSchema');
+    
+    const usersWithTokens = await User.find({ "fcmTokens.0": { $exists: true } });
+    console.log(`[Migration] Found ${usersWithTokens.length} users with legacy tokens.`);
+    
+    let migratedCount = 0;
+    for (const user of usersWithTokens) {
+      for (const tokenObj of user.fcmTokens) {
+        await DeviceToken.findOneAndUpdate(
+          { token: tokenObj.token },
+          { 
+            userId: user._id, 
+            platform: tokenObj.platform || 'unknown',
+            lastUsed: tokenObj.lastUsed || new Date()
+          },
+          { upsert: true }
+        );
+        migratedCount++;
+      }
+    }
+    if (migratedCount > 0) {
+      console.log(`[Migration] Successfully migrated ${migratedCount} tokens to DeviceToken collection.`);
+    }
+  } catch (err) {
+    console.error('[Migration] Token migration failed:', err);
+  }
+};
+migrateTokens();
+
 var app = express();
 
 // Trust Proxy (Required for Nginx/Heroku/Load Balancers)
