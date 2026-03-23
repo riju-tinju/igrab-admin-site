@@ -1,4 +1,5 @@
 const helmet = require('helmet');
+const mongoose = require('mongoose');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');

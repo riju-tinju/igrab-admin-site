@@ -22,7 +22,7 @@ const deviceTokenSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Index for performance when sending broadcast
-deviceTokenSchema.index({ token: 1 });
+// Index for performance is already handled by unique: true
+// deviceTokenSchema.index({ token: 1 });
 
 module.exports = mongoose.model('DeviceToken', deviceTokenSchema);
