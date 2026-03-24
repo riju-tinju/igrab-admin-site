@@ -132,7 +132,7 @@ const sendOrderStatusNotification = async (order) => {
     }
 };
 
-const sendBroadcastNotification = async (title, body, data = {}) => {
+const sendBroadcastNotification = async (title, body, imageUrl = null, data = {}) => {
     if (!initializeFirebase()) return;
 
     try {
@@ -148,7 +148,8 @@ const sendBroadcastNotification = async (title, body, data = {}) => {
         const message = {
             notification: {
                 title,
-                body
+                body,
+                ...(imageUrl && { image: imageUrl })
             },
             data: {
                 ...data,
