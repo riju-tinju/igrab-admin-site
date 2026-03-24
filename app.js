@@ -225,6 +225,7 @@ app.use('/uploads/products', express.static(path.join(__dirname, '../storage/pub
 app.use('/uploads/brands', express.static(path.join(__dirname, '../storage/public/brands')));
 app.use('/uploads/categories', express.static(path.join(__dirname, '../storage/public/categories')));
 app.use('/uploads/others', express.static(path.join(__dirname, '../storage/public/others')));
+app.use('/uploads/notification', express.static(path.join(__dirname, '../storage/public/notification')));
 
 
 app.use('/', adminAuthRouter)

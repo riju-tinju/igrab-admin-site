@@ -1315,39 +1315,91 @@
                 // Retry button
                 document.getElementById('retryBtn').addEventListener('click', loadDashboard);
 
-                // Broadcast Notification Handler
-                document.getElementById('broadcastTestBtn')?.addEventListener('click', async () => {
-                    const title = prompt("Enter Notification Title:", "System Test");
-                    const body = prompt("Enter Notification Message:", "This is a test notification for all users.");
+                // --- Broadcast Notification Modal Logic ---
+                const broadcastModal = document.getElementById('broadcastModal');
+                const broadcastImageInput = document.getElementById('broadcastImage');
+                const imagePreview = document.getElementById('imagePreview');
+                const previewIcon = document.getElementById('previewIcon');
+
+                // Open Modal
+                document.getElementById('broadcastTestBtn')?.addEventListener('click', () => {
+                    broadcastModal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden'; // Prevent scroll
+                });
+
+                // Close Modal
+                const closeModal = () => {
+                    broadcastModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto'; // Restore scroll
+                    document.getElementById('broadcastTitle').value = '';
+                    document.getElementById('broadcastBody').value = '';
+                    broadcastImageInput.value = '';
+                    imagePreview.src = '#';
+                    imagePreview.classList.add('hidden');
+                    previewIcon.classList.remove('hidden');
+                };
+
+                document.getElementById('cancelBroadcastBtn')?.addEventListener('click', closeModal);
+                document.getElementById('closeBroadcastModalOverlay')?.addEventListener('click', closeModal);
+
+                // Image Preview
+                broadcastImageInput?.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            imagePreview.classList.remove('hidden');
+                            previewIcon.classList.add('hidden');
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // Submit Broadcast
+                document.getElementById('confirmBroadcastBtn')?.addEventListener('click', async () => {
+                    const title = document.getElementById('broadcastTitle').value;
+                    const body = document.getElementById('broadcastBody').value;
+                    const imageFile = broadcastImageInput.files[0];
                     
-                    if (!title || !body) return;
+                    if (!title || !body) {
+                        ToastManager.show('Error', 'Title and Message are required', 'error');
+                        return;
+                    }
 
                     try {
-                        const btn = document.getElementById('broadcastTestBtn');
+                        const btn = document.getElementById('confirmBroadcastBtn');
+                        const originalContent = btn.innerHTML;
                         btn.disabled = true;
                         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
 
+                        const formData = new FormData();
+                        formData.append('title', title);
+                        formData.append('body', body);
+                        if (imageFile) {
+                            formData.append('image', imageFile);
+                        }
+
                         const response = await fetch('/api/admin/notifications/broadcast', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ title, body })
+                            body: formData
                         });
                         
                         const result = await response.json();
-                        
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+
                         if (result.success) {
-                            ToastManager.show('Success', `Broadcast sent to ${result.successCount} devices!`, 'success');
+                            ToastManager.show('Success', result.message || 'Broadcast sent successfully!', 'success');
+                            closeModal();
                         } else {
                             ToastManager.show('Error', result.message || 'Failed to send broadcast', 'error');
                         }
                     } catch (error) {
-                        ToastManager.show('Error', 'An error occurred while sending broadcast', 'error');
-                    } finally {
-                        const btn = document.getElementById('broadcastTestBtn');
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Test to All';
-                        }
+                        console.error('Broadcast Error:', error);
+                        ToastManager.show('Error', 'System connection failed', 'error');
+                        document.getElementById('confirmBroadcastBtn').disabled = false;
+                        document.getElementById('confirmBroadcastBtn').innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Broadcast';
                     }
                 });
 
@@ -1365,6 +1417,67 @@
             });
         </script>
 
+
+        <!-- Broadcast Notification Modal -->
+        <div id="broadcastModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity" aria-hidden="true" id="closeBroadcastModalOverlay"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-8 sm:pb-6">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-12 sm:w-12">
+                                <i class="fas fa-bullhorn text-yellow-600 text-xl"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-xl font-bold text-gray-900" id="modal-title">Push Notification Broadcast</h3>
+                                <p class="text-sm text-gray-500 mb-4">Send a push message to all registered devices.</p>
+                                
+                                <div class="space-y-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Notification Title</label>
+                                        <input type="text" id="broadcastTitle" placeholder="e.g. Flash Sale Alert! ⚡" 
+                                            class="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent sm:text-sm transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Message Body</label>
+                                        <textarea id="broadcastBody" rows="3" placeholder="Describe your offer or update..."
+                                            class="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent sm:text-sm transition-all"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Notification Image (Optional)</label>
+                                        <div class="mt-1 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-200 border-dashed rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all cursor-pointer group" id="imageUploadArea">
+                                            <div class="space-y-2 text-center">
+                                                <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl group-hover:text-yellow-600 transition-colors" id="previewIcon"></i>
+                                                <img id="imagePreview" src="#" alt="Preview" class="hidden mx-auto h-32 w-auto object-cover rounded-lg shadow-md mb-2">
+                                                <div class="flex text-sm text-gray-600 justify-center">
+                                                    <label for="broadcastImage" class="relative cursor-pointer bg-white rounded-md font-bold text-yellow-600 hover:text-yellow-500 focus-within:outline-none">
+                                                        <span>Upload a file</span>
+                                                        <input id="broadcastImage" name="image" type="file" class="sr-only" accept="image/*">
+                                                    </label>
+                                                    <p class="pl-1">or drag and drop</p>
+                                                </div>
+                                                <p class="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="confirmBroadcastBtn"
+                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-lg px-6 py-2.5 bg-yellow-600 text-sm font-bold text-white hover:bg-yellow-700 focus:outline-none sm:ml-3 sm:w-auto transition-all active:scale-95 shadow-yellow-200">
+                            <i class="fas fa-paper-plane mr-2 mt-0.5"></i>Send Broadcast
+                        </button>
+                        <button type="button" id="cancelBroadcastBtn"
+                            class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-200 shadow-sm px-6 py-2.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-100 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto transition-all">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <%- include('./partials/Footer') %>
 
