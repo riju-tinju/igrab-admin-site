@@ -153,6 +153,9 @@ const sendBroadcastNotification = async (title, body, imageUrl = null, data = {}
             },
             data: {
                 ...data,
+                image: imageUrl || "",
+                large_icon: imageUrl || "",
+                big_picture: imageUrl || "",
                 click_action: 'FLUTTER_NOTIFICATION_CLICK',
                 type: 'BROADCAST'
             },
