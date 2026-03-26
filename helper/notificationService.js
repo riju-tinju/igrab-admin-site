@@ -153,7 +153,7 @@ const sendBroadcastNotification = async (title, body, imageUrl = null, data = {}
             },
             android: {
                 notification: {
-                    ...(imageUrl && { imageUrl: imageUrl }),
+                    ...(imageUrl && { image: imageUrl }),
                     clickAction: 'TOP_STORY_NOTIFICATION_CLICK'
                 }
             },
