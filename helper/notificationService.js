@@ -151,13 +151,22 @@ const sendBroadcastNotification = async (title, body, imageUrl = null, data = {}
                 body,
                 ...(imageUrl && { image: imageUrl })
             },
+            android: {
+                notification: {
+                    ...(imageUrl && { imageUrl: imageUrl }),
+                    clickAction: 'TOP_STORY_NOTIFICATION_CLICK'
+                }
+            },
             data: {
                 ...data,
-                image: imageUrl || "",
-                large_icon: imageUrl || "",
-                big_picture: imageUrl || "",
-                click_action: 'FLUTTER_NOTIFICATION_CLICK',
-                type: 'BROADCAST'
+                title,
+                body,
+                type: 'BROADCAST',
+                ...(imageUrl && { 
+                    image: imageUrl,
+                    picture: imageUrl,
+                    large_icon: imageUrl
+                })
             },
             tokens: tokens
         };
