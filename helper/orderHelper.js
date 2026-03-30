@@ -11,6 +11,8 @@ const Store = require("../model/storeBranchSchema");
 const Order = require("../model/orderSchema");
 const DeliveryExecutive = require("../model/deliveryExecutiveSchema")
 const { sendOrderStatusNotification } = require("./notificationService");
+const PaymentConfiguration = require("../model/paymentSchema");
+const stripe = require("stripe");
 
 
 const path = require("path");
@@ -123,10 +125,13 @@ const orderFun = {
         orderItems: order.orderItems,
         address: order.address,
         deliveryExecutive: order.deliveryExecutive,
+        cancelReason: order.cancelReason,
+        cancelDate: order.cancelDate,
         updatedAt: order.updatedAt,
       }));
 
       const [
+        cancelPendingOrders,
         pendingOrders,
         confirmedOrders,
         processingOrders,
@@ -136,6 +141,7 @@ const orderFun = {
         todayOrders,
         totalRevenue
       ] = await Promise.all([
+        Order.countDocuments({ storeId: branchId, status: "Cancel_Pending" }),
         Order.countDocuments({ storeId: branchId, status: "Pending" }),
         Order.countDocuments({ storeId: branchId, status: "Confirmed" }),
         Order.countDocuments({ storeId: branchId, status: "Processing" }),
@@ -175,6 +181,7 @@ const orderFun = {
           },
           stats: {
             totalOrders,
+            cancelPendingOrders,
             pendingOrders,
             confirmedOrders,
             processingOrders,
@@ -201,7 +208,7 @@ const orderFun = {
       let { status, paymentStatus, assignedTo } = req.body;
 
       // Validate required 'status'
-      const validStatuses = ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled'];
+      const validStatuses = ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled', 'Cancel_Pending'];
       if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
@@ -294,7 +301,7 @@ const orderFun = {
         });
       }
 
-      const validStatuses = ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled'];
+      const validStatuses = ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled', 'Cancel_Pending'];
       const validPaymentStatuses = ['Paid', 'Unpaid', 'Failed'];
 
       if (!validStatuses.includes(updates.status)) {
@@ -329,19 +336,56 @@ const orderFun = {
         updateFields.assignedTo = updates.assignedTo;
       }
 
-      const updatedOrders = await Order.find({
-        _id: { $in: orderIds }
-      });
+      const targetStatus = (updates.status || '').trim();
+      const isCancellation = targetStatus === 'Cancelled' || targetStatus === 'Cancel_Pending';
+      const totalSelected = (orderIds || []).length;
+      let skippedCount = 0;
+      let ordersToUpdate;
 
-      if (updatedOrders.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No orders found for the provided IDs",
-          code: "ORDERS_NOT_FOUND"
+      console.log(`[BULK UPDATE] Target Status: "${targetStatus}", IsCancellation: ${isCancellation}, IDs Count: ${totalSelected}`);
+
+      if (isCancellation) {
+        // For cancellation, strictly fetch those that are NOT Paid
+        // We use a broader nin to catch variants just in case
+        ordersToUpdate = await Order.find({
+          _id: { $in: orderIds },
+          paymentStatus: { $nin: ['Paid', 'paid', 'PAID', 'Success', 'success', 'SUCCESS'] }
+        });
+        skippedCount = totalSelected - ordersToUpdate.length;
+
+        if (skippedCount > 0) {
+          // Log which ones were skipped for debugging
+          const skippedOrders = await Order.find({
+            _id: { $in: orderIds },
+            paymentStatus: { $in: ['Paid', 'paid', 'PAID', 'Success', 'success', 'SUCCESS'] }
+          }).select('orderId paymentStatus');
+          console.log(`[BULK UPDATE] SKIPPED ${skippedCount} orders:`, skippedOrders.map(o => `${o.orderId}(${o.paymentStatus})`).join(', '));
+        }
+      } else {
+        // For other status updates, fetch all selected orders
+        ordersToUpdate = await Order.find({
+          _id: { $in: orderIds }
         });
       }
 
-      const bulkOps = updatedOrders.map(order => ({
+      console.log(`[BULK UPDATE] Target Status: ${updates.status}, Selected: ${totalSelected}, ToUpdate: ${ordersToUpdate.length}, Skipped: ${skippedCount}`);
+
+      if (ordersToUpdate.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: skippedCount > 0 
+            ? `All selected orders (${skippedCount}) were skipped as they are already Paid and require manual refund.` 
+            : "No eligible orders were found for bulk update.",
+          data: {
+            updatedCount: 0,
+            skippedCount: skippedCount,
+            orders: []
+          }
+        });
+      }
+
+      // Step 2: Perform Bulk Write
+      const bulkOps = ordersToUpdate.map(order => ({
         updateOne: {
           filter: { _id: order._id },
           update: { $set: updateFields }
@@ -350,20 +394,27 @@ const orderFun = {
 
       await Order.bulkWrite(bulkOps);
 
-      const refreshedOrders = await Order.find({ _id: { $in: orderIds } }).select("_id status paymentStatus updatedAt");
+      const refreshedOrderIds = ordersToUpdate.map(o => o._id);
+      const refreshedOrders = await Order.find({ _id: { $in: refreshedOrderIds } }).select("_id status paymentStatus updatedAt");
 
       // Send notifications for all updated orders
-      updatedOrders.forEach(order => {
+      ordersToUpdate.forEach(order => {
         // Update the status in memory to match the new status
         order.status = updates.status; 
         sendOrderStatusNotification(order);
       });
 
+      let responseMessage = `${refreshedOrders.length} orders updated successfully.`;
+      if (skippedCount > 0) {
+        responseMessage += ` ${skippedCount} paid orders were skipped to avoid refund errors.`;
+      }
+
       return res.status(200).json({
         success: true,
-        message: `${refreshedOrders.length} orders updated successfully`,
+        message: responseMessage,
         data: {
           updatedCount: refreshedOrders.length,
+          skippedCount: skippedCount,
           orders: refreshedOrders
         }
       });
@@ -377,6 +428,87 @@ const orderFun = {
       });
     }
   },
+
+  processOrderRefund: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const order = await Order.findById(id);
+
+      if (!order) {
+        return res.status(404).json({ success: false, message: "Order not found" });
+      }
+
+      if (order.paymentMethod !== 'Online') {
+        return res.status(400).json({ success: false, message: "Only online orders can be refunded automatically." });
+      }
+
+      if (order.paymentStatus === 'Refunded') {
+        return res.status(400).json({ success: false, message: "Order is already refunded." });
+      }
+
+      // Fetch Stripe configuration
+      const paymentConfig = await PaymentConfiguration.findOne({});
+      if (!paymentConfig || !paymentConfig.stripe.isEnabled || !paymentConfig.stripe.secretKey) {
+        return res.status(400).json({ success: false, message: "Stripe is not configured or enabled." });
+      }
+
+      const stripeClient = stripe(paymentConfig.stripe.secretKey);
+      let paymentIntentId = order.paymentIntentId;
+
+      // Fallback: If paymentIntentId is missing, try to find it via metadata search in Stripe
+      if (!paymentIntentId) {
+        console.log(`[REFUND] Fallback search for Order: ${order.orderId}`);
+        const searchResult = await stripeClient.paymentIntents.search({
+          query: `metadata['orderId']:'${order.orderId}'`,
+        });
+
+        if (searchResult.data && searchResult.data.length > 0) {
+          paymentIntentId = searchResult.data[0].id;
+          order.paymentIntentId = paymentIntentId;
+          await order.save();
+          console.log(`[REFUND] Found paymentIntentId ${paymentIntentId} via fallback search.`);
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: "Could not find a valid Stripe transaction for this order. Please refund via Stripe Dashboard manually."
+          });
+        }
+      }
+
+      // Process the refund
+      const refund = await stripeClient.refunds.create({
+        payment_intent: paymentIntentId,
+        reason: 'requested_by_customer'
+      });
+
+      // Update order status
+      order.status = 'Cancelled';
+      order.paymentStatus = 'Refunded';
+      order.refundId = refund.id;
+      order.cancelDate = new Date();
+      order.updatedAt = new Date();
+      await order.save();
+
+      // Trigger notification
+      await sendOrderStatusNotification(order);
+
+      console.log(`[REFUND SUCCESS] Order: ${order.orderId}, Refund ID: ${refund.id}`);
+
+      return res.status(200).json({
+        success: true,
+        message: `Refund successful for order ${order.orderId}. Status updated to Cancelled.`,
+        data: { refundId: refund.id }
+      });
+
+    } catch (error) {
+      console.error("[REFUND ERROR]:", error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Failed to process refund."
+      });
+    }
+  },
+
   exportOrders: async (req, res) => {
     try {
       const { orderIds } = req.body;

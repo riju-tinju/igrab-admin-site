@@ -141,6 +141,10 @@ router.patch('/api/orders/bulk-update', asyncHandler(async function (req, res, n
   await orderHelper.bulkUpdateOrderStatus(req, res);
 }));
 
+router.post('/api/orders/:id/refund', asyncHandler(async function (req, res, next) {
+  await orderHelper.processOrderRefund(req, res);
+}));
+
 router.post('/api/orders/export', asyncHandler(async function (req, res, next) {
   await orderHelper.exportOrders(req, res);
 }));

@@ -21,8 +21,16 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled'],
+    enum: ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled', 'Cancel_Pending'],
     default: 'Pending'
+  },
+  cancelReason: {
+    type: String,
+    default: null
+  },
+  cancelDate: {
+    type: Date,
+    default: null
   },
   paymentStatus: {
     type: String,
@@ -126,6 +134,14 @@ const orderSchema = new mongoose.Schema({
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'DeliveryBoy',
+    default: null
+  },
+  paymentIntentId: {
+    type: String,
+    default: null
+  },
+  refundId: {
+    type: String,
     default: null
   },
   updatedAt: {

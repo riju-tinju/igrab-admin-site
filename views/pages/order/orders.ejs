@@ -82,6 +82,11 @@
         color: white;
       }
 
+      .status-cancel_pending {
+        background-color: #F87171;
+        color: white;
+      }
+
       /* Payment Status Styles */
       .payment-paid {
         background-color: #10B981;
@@ -358,14 +363,38 @@
         white-space: normal;
       }
 
-      .tooltip-content::after {
-        content: '';
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 4px solid transparent;
-        border-top-color: #1f2937;
+      /* Modal Styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+      }
+
+      .modal-overlay.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        transform: scale(0.95);
+        transition: transform 0.2s ease;
+      }
+
+      .modal-overlay.show .modal-content {
+        transform: scale(1);
       }
     </style>
 
@@ -431,6 +460,59 @@
             <button id="bulkExportSelectedBtn"
               class="bg-white text-brand-teal px-4 py-1 rounded text-sm font-medium hover:bg-gray-100">
               <i class="fas fa-download mr-1"></i>Export
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk Cancellation Modal -->
+      <div id="bulkCancelModal" class="modal-overlay">
+        <div class="modal-content border-t-4 border-red-500">
+          <div class="flex items-center mb-4 text-red-600">
+            <i class="fas fa-exclamation-triangle text-2xl mr-3"></i>
+            <h3 class="text-xl font-bold">Bulk Cancellation Warning</h3>
+          </div>
+          <p class="text-gray-600 mb-6">
+            You are about to cancel <span id="cancelCountText" class="font-bold text-gray-900">0</span> selected orders. 
+            <br><br>
+            <span class="font-semibold text-red-700">Important:</span> Only <strong>Unpaid / COD</strong> orders will be cancelled in bulk. Paid orders will be automatically skipped to ensure you can process their refunds manually.
+          </p>
+          <div class="flex justify-end space-x-3">
+            <button onclick="document.getElementById('bulkCancelModal').classList.remove('show')"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">
+              Go Back
+            </button>
+            <button id="confirmBulkCancelBtn"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold shadow-sm transition-all">
+              Confirm Bulk Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refund Confirmation Modal -->
+      <div id="refundConfirmModal" class="modal-overlay">
+        <div class="modal-content border-t-4 border-red-600">
+          <div class="flex items-center mb-4 text-red-600">
+            <div class="bg-red-100 p-3 rounded-full mr-4">
+              <i class="fas fa-undo-alt text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold">Confirm Full Refund</h3>
+          </div>
+          <p class="text-gray-600 mb-6">
+            Are you sure you want to refund order <span id="refundOrderIdText" class="font-bold text-gray-900"></span>? 
+            <br><br>
+            <span class="text-sm font-medium text-red-700">
+              <i class="fas fa-info-circle mr-1"></i>
+              This will process a full refund via Stripe and cancel the order. This action cannot be undone.
+            </span>
+          </p>
+          <div class="flex justify-end space-x-3">
+            <button id="cancelRefundBtn" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+              No, Keep Order
+            </button>
+            <button id="confirmRefundBtn" class="px-6 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 shadow-sm transition-all transform hover:scale-105">
+              Yes, Refund & Cancel
             </button>
           </div>
         </div>
@@ -536,6 +618,11 @@
                 class="filter-btn px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
                 data-filter="Delivered" data-type="status">
                 <i class="fas fa-truck mr-1"></i>Delivered
+              </button>
+              <button
+                class="filter-btn px-3 py-2 rounded-lg border border-red-300 text-red-700 hover:bg-red-50 transition-colors text-sm"
+                data-filter="Cancel_Pending" data-type="status">
+                <i class="fas fa-exclamation-triangle mr-1"></i>Cancel Pending
               </button>
             </div>
 
@@ -973,6 +1060,28 @@
             return;
           }
 
+          // Special handling for cancellation: Show warning modal
+          if (status === 'Cancelled') {
+            const modal = document.getElementById('bulkCancelModal');
+            const countText = document.getElementById('cancelCountText');
+            const confirmBtn = document.getElementById('confirmBulkCancelBtn');
+
+            countText.textContent = selectedOrders.size;
+            modal.classList.add('show');
+
+            // Setup confirmation button with one-time listener
+            confirmBtn.onclick = async () => {
+              modal.classList.remove('show');
+              await BulkOperationsManager._executeBulkUpdate(status);
+            };
+            return;
+          }
+
+          // Direct update for other statuses
+          await BulkOperationsManager._executeBulkUpdate(status);
+        }
+
+        static async _executeBulkUpdate(status) {
           try {
             const orderIds = Array.from(selectedOrders);
 
@@ -999,10 +1108,11 @@
               throw new Error(data.error?.message || 'Bulk update failed');
             }
 
-            ToastManager.show(`Updated ${data.data.updatedCount} orders to ${status}`, 'success');
+            // The backend returns a detailed message about skipped orders
+            ToastManager.show(data.message || `Updated orders to ${status}`, 'success');
 
             // Clear selection
-            this.selectAllOrders(false);
+            BulkOperationsManager.selectAllOrders(false);
 
             // Reload orders
             loadOrders();
@@ -1072,6 +1182,28 @@
             throw error;
           }
         }
+
+        static async refundOrder(orderId) {
+          try {
+            const response = await fetch(`${API_BASE_URL}/orders/${orderId}/refund`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Refund API Error:', error);
+            throw error;
+          }
+        }
       }
 
       // UI State Management
@@ -1115,6 +1247,61 @@
         }
       }
 
+      // Refund Manager
+      class RefundManager {
+        static currentOrderId = null;
+
+        static showRefundModal(orderId, orderDisplayId) {
+          this.currentOrderId = orderId;
+          const modal = document.getElementById('refundConfirmModal');
+          document.getElementById('refundOrderIdText').textContent = orderDisplayId;
+          modal.classList.add('show');
+
+          // One-time listeners
+          const cancelBtn = document.getElementById('cancelRefundBtn');
+          const confirmBtn = document.getElementById('confirmRefundBtn');
+
+          cancelBtn.onclick = () => {
+            modal.classList.remove('show');
+            this.currentOrderId = null;
+          };
+
+          confirmBtn.onclick = async () => {
+            await this.processRefund();
+          };
+        }
+
+        static async processRefund() {
+          if (!this.currentOrderId) return;
+
+          const modal = document.getElementById('refundConfirmModal');
+          const confirmBtn = document.getElementById('confirmRefundBtn');
+          const originalBtnText = confirmBtn.innerHTML;
+
+          try {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+
+            const result = await OrdersAPI.refundOrder(this.currentOrderId);
+
+            if (result.success) {
+              ToastManager.show(result.message || 'Refund processed successfully', 'success');
+              modal.classList.remove('show');
+              loadOrders(); // Reload to show updated status
+            } else {
+              throw new Error(result.message || 'Refund failed');
+            }
+          } catch (error) {
+            console.error('Refund Process Error:', error);
+            ToastManager.show(error.message, 'error');
+          } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalBtnText;
+            this.currentOrderId = null;
+          }
+        }
+      }
+
       // Template Rendering
       class TemplateRenderer {
         static renderStatsCards(stats) {
@@ -1122,11 +1309,23 @@
           statsContainer.innerHTML = `
           <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
             <div class="flex items-center">
+              <div class="bg-red-500 text-white p-3 rounded-lg">
+                <i class="fas fa-exclamation-circle text-lg"></i>
+              </div>
+              <div class="ml-4">
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Cancel Pending</p>
+                <p class="text-xl font-bold text-red-600">${stats.cancelPendingOrders || 0}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-lg shadow-sm border fade-in">
+            <div class="flex items-center">
               <div class="brand-teal text-white p-3 rounded-lg">
                 <i class="fas fa-shopping-cart"></i>
               </div>
               <div class="ml-4">
-                <p class="text-sm text-gray-600">Total Orders</p>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Orders</p>
                 <p class="text-xl font-bold">${stats.totalOrders || 0}</p>
               </div>
             </div>
@@ -1247,7 +1446,8 @@
                 <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                 <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
                 <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                ${order.paymentMethod !== 'Online' ? `<option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>` : ''}
+                <option value="Cancel_Pending" ${order.status === 'Cancel_Pending' ? 'selected' : ''}>Cancel Pending</option>
               </select>
             </td>
             <td class="p-4">
@@ -1268,6 +1468,33 @@
             //   </div>
             // </td>
             tbody.appendChild(row);
+
+            if (order.status === 'Cancel_Pending' || order.cancelReason) {
+              const reasonRow = document.createElement('tr');
+              reasonRow.className = 'bg-red-50 border-b fade-in';
+              reasonRow.innerHTML = `
+                <td colspan="8" class="p-4">
+                  <div class="flex items-start justify-between w-full">
+                    <div class="flex items-start">
+                      <div class="bg-red-100 text-red-600 p-2 rounded-lg mr-4">
+                        <i class="fas fa-exclamation-circle text-lg"></i>
+                      </div>
+                      <div>
+                        <div class="font-bold text-red-800 uppercase text-xs tracking-wider mb-1">
+                          Cancellation Request ${order.cancelDate ? `(${new Date(order.cancelDate).toLocaleString()})` : ''}
+                        </div>
+                        <p class="text-sm text-red-700 italic font-medium">"${order.cancelReason || 'No reason provided'}"</p>
+                      </div>
+                    </div>
+                    ${order.paymentMethod === 'Online' ? `
+                    <button onclick="RefundManager.showRefundModal('${order._id}', '${order.orderId}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all transform hover:scale-105">
+                      <i class="fas fa-undo-alt mr-2"></i>Cancel & Refund
+                    </button>` : ''}
+                  </div>
+                </td>
+              `;
+              tbody.appendChild(reasonRow);
+            }
           });
 
           // Setup order checkbox listeners
@@ -1348,10 +1575,30 @@
                 <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                 <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
                 <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                ${order.paymentMethod !== 'Online' ? `<option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>` : ''}
+                <option value="Cancel_Pending" ${order.status === 'Cancel_Pending' ? 'selected' : ''}>Cancel Pending</option>
               </select>
             </div>
           `;
+
+            if (order.status === 'Cancel_Pending' || order.cancelReason) {
+              const reasonDiv = document.createElement('div');
+              reasonDiv.className = 'mt-3 p-3 bg-red-50 rounded-lg border border-red-100';
+              reasonDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-2 text-xs"></i>
+                    <span class="text-[10px] font-bold text-red-800 uppercase tracking-tight">Cancellation Request</span>
+                  </div>
+                  ${order.paymentMethod === 'Online' ? `
+                  <button onclick="RefundManager.showRefundModal('${order._id}', '${order.orderId}')" class="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm transition-transform active:scale-95">
+                    Refund
+                  </button>` : ''}
+                </div>
+                <p class="text-xs text-red-700 italic font-medium">"${order.cancelReason || 'No reason provided'}"</p>
+              `;
+              card.appendChild(reasonDiv);
+            }
 
             container.appendChild(card);
           });

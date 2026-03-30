@@ -102,14 +102,16 @@ const sendOrderStatusNotification = async (order) => {
             'Confirmed': `Your order ${order.orderId} has been confirmed.`,
             'Processing': `We are processing your order ${order.orderId}.`,
             'Delivered': `Success! Your order ${order.orderId} has been delivered.`,
-            'Cancelled': `Your order ${order.orderId} has been cancelled.`
+            'Cancelled': `Your order ${order.orderId} has been cancelled.`,
+            'Refunded': `Your order ${order.orderId} has been cancelled and a full refund has been processed to your bank.`
         },
         ar: {
             'Placed': `تم تقديم طلبك ${order.orderId} بنجاح.`,
             'Confirmed': `تم تأكيد طلبك ${order.orderId}.`,
             'Processing': `نحن نقوم بمعالجة طلبك ${order.orderId}.`,
             'Delivered': `تم توصيل طلبك ${order.orderId} بنجاح.`,
-            'Cancelled': `تم إلغاء طلبك ${order.orderId}.`
+            'Cancelled': `تم إلغاء طلبك ${order.orderId}.`,
+            'Refunded': `تم إلغاء طلبك ${order.orderId} وتمت معالجة استرداد المبلغ بالكامل إلى البنك الخاص بك.`
         }
     };
 
@@ -118,7 +120,14 @@ const sendOrderStatusNotification = async (order) => {
         const lang = user?.language === 'ar' ? 'ar' : 'en';
         
         const title = lang === 'ar' ? 'تحديث الطلب' : 'Order Update';
-        const body = statusMessages[lang][order.status] || `Order ${order.orderId} status: ${order.status}`;
+        
+        // Custom logic: if it's status Cancelled AND paymentStatus is Refunded, use the Refunded message
+        let statusKey = order.status;
+        if (order.status === 'Cancelled' && order.paymentStatus === 'Refunded') {
+            statusKey = 'Refunded';
+        }
+
+        const body = statusMessages[lang][statusKey] || `Order ${order.orderId} status: ${order.status}`;
 
         // Send asynchronously
         sendPushToUser(order.userId, title, body, {
