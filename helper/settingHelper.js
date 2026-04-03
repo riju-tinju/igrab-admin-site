@@ -323,10 +323,14 @@ const settingHelper = {
 
             return res.status(200).json({
                 success: true,
-                data: branch.paymentConfig || {
-                    stripe: { publishableKey: '', secretKey: '', webhookSecret: '', isEnabled: false },
-                    wallet: { isEnabled: false },
-                    cod: { isEnabled: false }
+                data: {
+                    ...(branch.paymentConfig ? branch.paymentConfig.toObject() : {
+                        stripe: { publishableKey: '', secretKey: '', webhookSecret: '', isEnabled: false },
+                        wallet: { isEnabled: false },
+                        cod: { isEnabled: false }
+                    }),
+                    isPickupOnlineEnabled: branch.isPickupOnlineEnabled ?? true,
+                    isPickupOfflineEnabled: branch.isPickupOfflineEnabled ?? true
                 }
             });
         } catch (err) {
@@ -369,6 +373,8 @@ const settingHelper = {
                 cod: { isEnabled: cod?.isEnabled ?? false },
                 wallet: { isEnabled: wallet?.isEnabled ?? false }
             };
+            branch.isPickupOnlineEnabled = req.body.isPickupOnlineEnabled === true || req.body.isPickupOnlineEnabled === 'true';
+            branch.isPickupOfflineEnabled = req.body.isPickupOfflineEnabled === true || req.body.isPickupOfflineEnabled === 'true';
 
             await branch.save();
 

@@ -514,6 +514,34 @@
                             </div>
                         </div>
 
+                        <!-- Order Pickup Toggles -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">Order Pickup (Online)</h3>
+                                        <p class="text-sm text-gray-600">Allow pickup with online payment</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="pickupOnlineToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">Order Pickup (Offline)</h3>
+                                        <p class="text-sm text-gray-600">Allow pickup with offline payment</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="pickupOfflineToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -1403,6 +1431,8 @@
                     document.getElementById('stripeWebhookSecret').value = data.data.stripe.webhookSecret || '';
                     document.getElementById('stripeToggle').checked = data.data.stripe.isEnabled || false;
                     document.getElementById('codToggle').checked = data.data.cod.isEnabled || false;
+                    document.getElementById('pickupOnlineToggle').checked = data.data.isPickupOnlineEnabled ?? true;
+                    document.getElementById('pickupOfflineToggle').checked = data.data.isPickupOfflineEnabled ?? true;
                 } catch (error) {
                     console.error('Load Payment Settings Error:', error);
                     ToastManager.show('Failed to load payment settings: ' + error.message, 'error');
@@ -1421,7 +1451,9 @@
                         },
                         cod: {
                             isEnabled: document.getElementById('codToggle').checked
-                        }
+                        },
+                        isPickupOnlineEnabled: document.getElementById('pickupOnlineToggle').checked,
+                        isPickupOfflineEnabled: document.getElementById('pickupOfflineToggle').checked
                     };
 
                     const response = await fetch(`${API_BASE_URL}/settings/payment`, {

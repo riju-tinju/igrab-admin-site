@@ -24,6 +24,15 @@ const orderSchema = new mongoose.Schema({
     enum: ['Pending', 'Placed', 'Confirmed', 'Processing', 'Delivered', 'Cancelled', 'Cancel_Pending'],
     default: 'Pending'
   },
+  fulfillmentType: {
+    type: String,
+    enum: ['Delivery', 'Pickup'],
+    default: 'Delivery'
+  },
+  pickupTime: {
+    type: String,
+    default: null
+  },
   cancelReason: {
     type: String,
     default: null

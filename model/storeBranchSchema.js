@@ -34,6 +34,14 @@ const storeBranchSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isPickupOnlineEnabled: {
+    type: Boolean,
+    default: true
+  },
+  isPickupOfflineEnabled: {
+    type: Boolean,
+    default: true
+  },
 
   // Per-Branch Settings
   paymentConfig: {

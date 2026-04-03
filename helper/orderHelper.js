@@ -128,6 +128,8 @@ const orderFun = {
         cancelReason: order.cancelReason,
         cancelDate: order.cancelDate,
         updatedAt: order.updatedAt,
+        fulfillmentType: order.fulfillmentType || 'Delivery',
+        pickupTime: order.pickupTime || null,
       }));
 
       const [
@@ -547,6 +549,8 @@ const orderFun = {
         { header: "Status", key: "status", width: 15 },
         { header: "Payment Status", key: "paymentStatus", width: 15 },
         { header: "Total Amount", key: "totalAmount", width: 15 },
+        { header: "Type", key: "fulfillmentType", width: 15 },
+        { header: "Pickup Time", key: "pickupTime", width: 15 },
         { header: "Address", key: "fullAddress", width: 40 },
         { header: "Items", key: "items", width: 50 }
       ];
@@ -610,6 +614,8 @@ const orderFun = {
           status: order.status,
           paymentStatus: order.paymentStatus,
           totalAmount: order.totalAmount,
+          fulfillmentType: order.fulfillmentType || 'Delivery',
+          pickupTime: order.pickupTime || '',
           fullAddress,
           items
         });
@@ -997,6 +1003,14 @@ const orderFun = {
         return res.status(404).json({
           success: false,
           message: "Order not found"
+        });
+      }
+
+      // Check if it's a pickup order
+      if (order.fulfillmentType === 'Pickup') {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot assign delivery executive to a pickup order"
         });
       }
 
