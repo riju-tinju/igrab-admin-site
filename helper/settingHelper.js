@@ -334,6 +334,8 @@ const settingHelper = {
                 }
             });
         } catch (err) {
+            console.error('--- getPayment Error ---');
+            console.error(err);
             return res.status(500).json({
                 success: false,
                 message: "An error occurred while fetching payment configuration"
@@ -342,6 +344,10 @@ const settingHelper = {
     },
     editPayment: async (req, res) => {
         try {
+            console.log('--- editPayment Diagnostic START ---');
+            console.log('Database:', mongoose.connection.db?.databaseName);
+            console.log('Request Body:', JSON.stringify(req.body, null, 2));
+
             const { branchId, stripe, cod, wallet } = req.body;
 
             if (!branchId) {
@@ -363,31 +369,67 @@ const settingHelper = {
                 return res.status(404).json({ success: false, message: "Branch not found" });
             }
 
-            branch.paymentConfig = {
-                stripe: {
-                    publishableKey: stripe.publishableKey || "",
-                    secretKey: stripe.secretKey || "",
-                    webhookSecret: stripe.webhookSecret || "",
-                    isEnabled: stripe.isEnabled
-                },
-                cod: { isEnabled: cod?.isEnabled ?? false },
-                wallet: { isEnabled: wallet?.isEnabled ?? false }
+            const updateData = {
+                $set: {
+                    paymentConfig: {
+                        stripe: {
+                            publishableKey: stripe.publishableKey || "",
+                            secretKey: stripe.secretKey || "",
+                            webhookSecret: stripe.webhookSecret || "",
+                            isEnabled: stripe.isEnabled
+                        },
+                        cod: { isEnabled: cod?.isEnabled ?? false },
+                        wallet: { isEnabled: wallet?.isEnabled ?? branch.paymentConfig?.wallet?.isEnabled ?? false }
+                    }
+                }
             };
-            branch.isPickupOnlineEnabled = req.body.isPickupOnlineEnabled === true || req.body.isPickupOnlineEnabled === 'true';
-            branch.isPickupOfflineEnabled = req.body.isPickupOfflineEnabled === true || req.body.isPickupOfflineEnabled === 'true';
 
-            await branch.save();
+            if (req.body.isPickupOnlineEnabled !== undefined) {
+                updateData.$set.isPickupOnlineEnabled = req.body.isPickupOnlineEnabled === true || req.body.isPickupOnlineEnabled === 'true';
+            }
+            if (req.body.isPickupOfflineEnabled !== undefined) {
+                updateData.$set.isPickupOfflineEnabled = req.body.isPickupOfflineEnabled === true || req.body.isPickupOfflineEnabled === 'true';
+            }
+
+            console.log('--- updateData for findByIdAndUpdate ---');
+            console.log(JSON.stringify(updateData, null, 2));
+
+            const updatedBranch = await Store.findByIdAndUpdate(
+                branchId,
+                updateData,
+                { new: true, runValidators: true, strict: false } // strict: false is key for dynamic fields
+            );
+
+            console.log('--- Database Update Result ---');
+            if (updatedBranch) {
+                console.log('Update Result - isPickupOnlineEnabled:', updatedBranch.isPickupOnlineEnabled);
+                console.log('Update Result - isPickupOfflineEnabled:', updatedBranch.isPickupOfflineEnabled);
+                console.log('Update Result - paymentConfig.cod.isEnabled:', updatedBranch.paymentConfig?.cod?.isEnabled);
+            } else {
+                console.log('Update Result: FAILED (Branch not found)');
+            }
+
+            // More explicit response construction
+            const responseData = {
+                stripe: updatedBranch.paymentConfig.stripe,
+                cod: updatedBranch.paymentConfig.cod,
+                wallet: updatedBranch.paymentConfig.wallet,
+                isPickupOnlineEnabled: updatedBranch.isPickupOnlineEnabled,
+                isPickupOfflineEnabled: updatedBranch.isPickupOfflineEnabled
+            };
 
             return res.status(200).json({
                 success: true,
                 message: "Payment configuration updated successfully",
-                data: branch.paymentConfig
+                data: responseData
             });
 
         } catch (err) {
+            console.error('--- editPayment Error ---');
+            console.error(err);
             return res.status(500).json({
                 success: false,
-                message: "An error occurred while updating payment configuration"
+                message: "An error occurred while updating payment configuration: " + err.message
             });
         }
     },

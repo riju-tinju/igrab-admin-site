@@ -458,8 +458,13 @@
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-xl font-bold text-gray-900">Payment Integration</h2>
                         <button id="savePaymentBtn"
-                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium">
-                            <i class="fas fa-save mr-2"></i>Save Changes
+                            class="brand-teal hover:brand-teal-light text-white px-4 py-2 rounded-lg font-medium flex items-center">
+                            <span class="btn-text">
+                                <i class="fas fa-save mr-2"></i>Save Changes
+                            </span>
+                            <span class="btn-loading hidden">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Saving...
+                            </span>
                         </button>
                     </div>
 
@@ -1456,6 +1461,17 @@
                         isPickupOfflineEnabled: document.getElementById('pickupOfflineToggle').checked
                     };
 
+                    console.log('--- savePaymentSettings Payload ---');
+                    console.log(paymentData);
+
+                    const btn = document.getElementById('savePaymentBtn');
+                    const text = btn.querySelector('.btn-text');
+                    const loading = btn.querySelector('.btn-loading');
+
+                    text.classList.add('hidden');
+                    loading.classList.remove('hidden');
+                    btn.disabled = true;
+
                     const response = await fetch(`${API_BASE_URL}/settings/payment`, {
                         method: 'PUT',
                         headers: {
@@ -1469,10 +1485,20 @@
                     }
                     const data = await response.json();
 
-                    ToastManager.show(data.message, 'success');
+                    ToastManager.show(data.message || 'Payment settings saved successfully', 'success');
+                    await loadPaymentSettings();
                 } catch (error) {
                     console.error('Save Payment Settings Error:', error);
                     ToastManager.show('Failed to save payment settings: ' + error.message, 'error');
+                } finally {
+                    const btn = document.getElementById('savePaymentBtn');
+                    if (btn) {
+                        const text = btn.querySelector('.btn-text');
+                        const loading = btn.querySelector('.btn-loading');
+                        if (text) text.classList.remove('hidden');
+                        if (loading) loading.classList.add('hidden');
+                        btn.disabled = false;
+                    }
                 }
             }
 

@@ -33,6 +33,10 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  estimatedPickupTime: {
+    type: Date,
+    default: null
+  },
   cancelReason: {
     type: String,
     default: null
@@ -121,13 +125,12 @@ const orderSchema = new mongoose.Schema({
     coordinates: {
       type: {
         type: String,
-        default: 'Point',
-        enum: ['Point'] // only 'Point' is allowed
+        enum: ['Point'],
+        required: false
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
-        default: [0, 0] // default coordinates
-        // required: true
+        type: [Number],
+        required: false
       }
     },
     distance: {

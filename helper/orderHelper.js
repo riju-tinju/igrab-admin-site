@@ -47,6 +47,10 @@ const orderFun = {
         dateTo,
         sortField = "orderDate",
         sortDirection = "desc",
+        fulfillmentType = "",
+        pickupFilter = "", // delayed, completed, time_not_set
+        pickupDateFrom,
+        pickupDateTo,
       } = req.query;
 
       const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -78,15 +82,25 @@ const orderFun = {
 
       const query = { storeId: branchId };
 
-      if (status) query.status = status;
-      if (paymentStatus) query.paymentStatus = paymentStatus;
-      if (paymentMethod) query.paymentMethod = paymentMethod;
+      // Standard Filters
+      if (status && status !== 'all') {
+        query.status = status;
+      }
+      if (paymentStatus) {
+        query.paymentStatus = paymentStatus;
+      }
+      if (paymentMethod) {
+        query.paymentMethod = paymentMethod;
+      }
+      
+      // Order Date Range
       if (dateFrom || dateTo) {
         query.orderDate = {};
         if (dateFrom) query.orderDate.$gte = new Date(dateFrom);
         if (dateTo) query.orderDate.$lte = new Date(dateTo);
       }
 
+      // Search (Regex)
       if (search) {
         const userIds = await User.find({
           $or: [
@@ -99,6 +113,42 @@ const orderFun = {
           { orderId: { $regex: search, $options: "i" } },
           { userId: { $in: userIds.map(u => u._id) } },
         ];
+      }
+
+      // Fulfillment & Pickup Specific Filters
+      if (fulfillmentType) {
+        query.fulfillmentType = fulfillmentType;
+      }
+
+      if (pickupFilter) {
+        // All pickup filters assume Pickup type
+        query.fulfillmentType = "Pickup";
+        
+        if (pickupFilter === "delayed") {
+          // Add to existing status filter if possible, otherwise set nin
+          if (query.status) {
+             // If they picked a status that isn't delivered/cancelled, keep it. 
+             // If they picked Delivered/Cancelled, delayed is empty results.
+             if (["Delivered", "Cancelled"].includes(query.status)) {
+                query.status = "EMPTY_FORCE_MATCH"; // Will return nothing
+             }
+          } else {
+             query.status = { $nin: ["Delivered", "Cancelled"] };
+          }
+          query.estimatedPickupTime = { $lt: new Date() };
+        } else if (pickupFilter === "completed") {
+          query.status = "Delivered";
+        } else if (pickupFilter === "time_not_set") {
+          query.estimatedPickupTime = null;
+        }
+      }
+
+      // Target Pickup Date Range
+      if (pickupDateFrom || pickupDateTo) {
+        query.fulfillmentType = "Pickup";
+        query.estimatedPickupTime = query.estimatedPickupTime || {};
+        if (pickupDateFrom) query.estimatedPickupTime.$gte = new Date(pickupDateFrom);
+        if (pickupDateTo) query.estimatedPickupTime.$lte = new Date(pickupDateTo);
       }
 
       const totalOrders = await Order.countDocuments(query);
@@ -130,6 +180,7 @@ const orderFun = {
         updatedAt: order.updatedAt,
         fulfillmentType: order.fulfillmentType || 'Delivery',
         pickupTime: order.pickupTime || null,
+        estimatedPickupTime: order.estimatedPickupTime || null,
       }));
 
       const [
@@ -141,7 +192,9 @@ const orderFun = {
         cancelledOrders,
         unpaidOrders,
         todayOrders,
-        totalRevenue
+        totalRevenue,
+        delayedPickups,
+        pendingPickups
       ] = await Promise.all([
         Order.countDocuments({ storeId: branchId, status: "Cancel_Pending" }),
         Order.countDocuments({ storeId: branchId, status: "Pending" }),
@@ -163,6 +216,17 @@ const orderFun = {
           { $match: { storeId: branchId, paymentStatus: "Paid", status: { $ne: "Cancelled" } } },
           { $group: { _id: null, total: { $sum: "$totalAmount" } } },
         ]).then(res => res[0]?.total || 0),
+        Order.countDocuments({
+          storeId: branchId,
+          fulfillmentType: "Pickup",
+          status: { $nin: ["Delivered", "Cancelled"] },
+          estimatedPickupTime: { $lt: new Date() }
+        }),
+        Order.countDocuments({
+          storeId: branchId,
+          fulfillmentType: "Pickup",
+          status: { $nin: ["Delivered", "Cancelled"] }
+        })
       ]);
 
       const totalPages = Math.ceil(totalOrders / limit);
@@ -192,6 +256,8 @@ const orderFun = {
             unpaidOrders,
             todayOrders,
             totalRevenue,
+            delayedPickups,
+            pendingPickups,
           },
         },
       });
