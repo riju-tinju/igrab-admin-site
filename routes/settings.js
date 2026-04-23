@@ -107,4 +107,8 @@ router.delete('/api/delivery-charges/:id', asyncHandler(async (req, res) => {
   await settingHelper.deleteDeliveryCharge(req, res);
 }));
 
+router.get('/api/settings/twilio-overview', asyncHandler(async (req, res) => {
+  await settingHelper.getTwilioOverview(req, res);
+}));
+
 module.exports = router;

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const twilio = require('twilio');
 const ObjectId = mongoose.Types.ObjectId;
 const Product = require("../model/productSchema");
 const Category = require("../model/categorySchema");
@@ -762,6 +763,93 @@ const settingHelper = {
             return res.status(500).json({
                 success: false,
                 message: "An error occurred while deleting delivery charge"
+            });
+        }
+    },
+
+    getTwilioOverview: async (req, res) => {
+        try {
+            const accountSid = process.env.TWILIO_ACCOUNT_SID;
+            const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+            if (!accountSid || !authToken) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Twilio credentials not found in environment variables."
+                });
+            }
+
+            const client = twilio(accountSid, authToken);
+
+            // 1. Fetch Account Balance (Note: This might fail for some account types)
+            let balanceData = { balance: "0.00", currency: "USD" };
+            try {
+                const balance = await client.balance.fetch();
+                balanceData = {
+                    balance: parseFloat(balance.balance).toFixed(2),
+                    currency: balance.currency
+                };
+            } catch (err) {
+                console.warn("Could not fetch Twilio balance:", err.message);
+                // Try fetching through account if balance fetch is not supported
+                try {
+                   const account = await client.api.accounts(accountSid).fetch();
+                   // Some accounts don't expose balance directly via API without specific permissions
+                } catch (e) {}
+            }
+
+            // 2. Fetch Usage for current month (Total and Breakdown)
+            const usageRecords = await client.usage.records.thisMonth.list();
+            
+            const findStat = (category) => {
+                const record = usageRecords.find(r => r.category === category);
+                return {
+                    cost: record ? parseFloat(record.price).toFixed(2) : "0.00",
+                    count: record ? parseInt(record.count) : 0
+                };
+            };
+
+            // Common Twilio categories: 'totalusage', 'sms', 'calls', 'mms', etc.
+            const totalRecord = usageRecords.find(r => r.category === 'totalusage') || usageRecords[0];
+            const totalUsage = totalRecord ? parseFloat(totalRecord.price).toFixed(2) : "0.00";
+
+            const smsStats = findStat('sms');
+            const voiceStats = findStat('calls');
+            
+            // For video, try common categories
+            let videoStats = findStat('video-minutes');
+            if (videoStats.count === 0) videoStats = findStat('video');
+
+            const totalMonthCost = parseFloat(smsStats.cost) + parseFloat(voiceStats.cost) + parseFloat(videoStats.cost);
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    balance: balanceData.balance,
+                    currency: balanceData.currency,
+                    usedThisMonth: totalUsage,
+                    status: parseFloat(balanceData.balance) > 20 ? 'Good' : (parseFloat(balanceData.balance) > 10 ? 'Low' : 'Critical'),
+                    breakdown: [
+                        { service: 'SMS', quantity: `${smsStats.count} msgs`, cost: smsStats.cost, percentage: totalMonthCost > 0 ? Math.round((smsStats.cost / totalMonthCost) * 100) : 0 },
+                        { service: 'Voice', quantity: `${voiceStats.count} min`, cost: voiceStats.cost, percentage: totalMonthCost > 0 ? Math.round((voiceStats.cost / totalMonthCost) * 100) : 0 },
+                        { service: 'Twilio Video', quantity: `${videoStats.count} sessions`, cost: videoStats.cost, percentage: totalMonthCost > 0 ? Math.round((videoStats.cost / totalMonthCost) * 100) : 0 }
+                    ],
+                    lastUpdated: new Date().toISOString()
+                }
+            });
+        } catch (err) {
+            console.error("Error in getTwilioOverview:", err);
+            let message = "Failed to fetch Twilio data";
+            if (err.message.includes("Authenticate")) {
+                message = "Invalid Twilio credentials. Please check your .env file.";
+            } else if (err.status === 404) {
+                message = "Twilio resource not found.";
+            } else {
+                message = err.message;
+            }
+            return res.status(err.status || 500).json({
+                success: false,
+                message: message
             });
         }
     }

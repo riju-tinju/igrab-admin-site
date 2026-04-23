@@ -89,6 +89,34 @@
                 }
             }
 
+            .skeleton {
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite;
+            }
+
+            @keyframes shimmer {
+                0% {
+                    background-position: 200% 0;
+                }
+                100% {
+                    background-position: -200% 0;
+                }
+            }
+
+            .progress-bar {
+                height: 8px;
+                border-radius: 4px;
+                background-color: #e5e7eb;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background-color: #1E7065;
+                transition: width 0.5s ease-out;
+            }
+
             .modal {
                 display: none;
                 position: fixed;
@@ -327,6 +355,9 @@
                         <button class="tab-button px-6 py-4 font-medium text-sm"
                             onclick="switchTab('delivery-charges')">
                             <i class="fas fa-truck mr-2"></i>Delivery Charges
+                        </button>
+                        <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('sms')">
+                            <i class="fas fa-comment-alt mr-2"></i>SMS
                         </button>
                         <!-- <button class="tab-button px-6 py-4 font-medium text-sm" onclick="switchTab('system')">
                         <i class="fas fa-info-circle mr-2"></i>System
@@ -700,16 +731,30 @@
                 </div>
             </div>
 
-            <!-- System Tab -->
-            <!-- <div id="system" class="tab-content">
-            <div class="bg-white rounded-lg shadow-sm border p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">System Information</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="systemInfoContainer"> -->
-            <!-- System info will be loaded here -->
-            <!-- </div>
+            <!-- SMS Tab -->
+            <div id="sms" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">Twilio Account Overview</h2>
+                        <div class="flex items-center space-x-2">
+                            <span id="smsLastUpdated" class="text-xs text-gray-500"></span>
+                            <button onclick="loadTwilioOverview()" class="p-2 text-gray-500 hover:text-brand-teal transition-colors" title="Refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="smsOverviewContainer">
+                        <!-- Loading Skeleton -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="skeleton h-32 rounded-xl"></div>
+                            <div class="skeleton h-32 rounded-xl"></div>
+                            <div class="skeleton h-32 rounded-xl"></div>
+                        </div>
+                        <div class="skeleton h-64 rounded-xl"></div>
+                    </div>
+                </div>
             </div>
-        </div> -->
         </main>
 
         <!-- Branch Modal -->
@@ -1801,40 +1846,153 @@
             `).join('');
             }
 
-            function renderSystemInfo(info) {
-                const container = document.getElementById('systemInfoContainer');
+            async function loadTwilioOverview() {
+                const container = document.getElementById('smsOverviewContainer');
+                const lastUpdatedSpan = document.getElementById('smsLastUpdated');
+                
+                // Show skeleton
                 container.innerHTML = `
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="font-semibold text-gray-900 mb-2">Application</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Version:</span>
-                            <span class="font-medium">${info.appVersion}</span>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="skeleton h-32 rounded-xl"></div>
+                        <div class="skeleton h-32 rounded-xl"></div>
+                        <div class="skeleton h-32 rounded-xl"></div>
+                    </div>
+                    <div class="skeleton h-64 rounded-xl"></div>
+                `;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/settings/twilio-overview`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load Twilio overview');
+                    }
+
+                    renderTwilioOverview(data.data);
+                    
+                    // Update timestamp
+                    const now = new Date(data.data.lastUpdated);
+                    lastUpdatedSpan.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+                } catch (error) {
+                    console.error('Load Twilio Overview Error:', error);
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="bg-red-50 text-red-500 p-4 rounded-full mb-4">
+                                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Unable to fetch Twilio data</h3>
+                            <p class="text-gray-600 mb-6 max-w-md">${error.message}</p>
+                            <button onclick="loadTwilioOverview()" class="brand-teal text-white px-6 py-2 rounded-lg font-medium hover:brand-teal-light transition-colors">
+                                <i class="fas fa-redo mr-2"></i>Retry
+                            </button>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Environment:</span>
-                            <span class="font-medium capitalize">${info.environment}</span>
+                    `;
+                }
+            }
+
+            function renderTwilioOverview(data) {
+                const container = document.getElementById('smsOverviewContainer');
+                
+                const statusColors = {
+                    'Good': 'text-green-500 bg-green-50',
+                    'Low': 'text-yellow-500 bg-yellow-50',
+                    'Critical': 'text-red-500 bg-red-50'
+                };
+
+                const statusDot = {
+                    'Good': '🟢',
+                    'Low': '🟡',
+                    'Critical': '🔴'
+                };
+
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- Current Balance -->
+                        <div class="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <p class="text-sm font-medium text-gray-500 mb-1">Current Balance</p>
+                            <h3 class="text-2xl font-bold text-gray-900">$ ${data.balance} <span class="text-sm font-normal text-gray-500">${data.currency}</span></h3>
+                            <div class="mt-4 flex items-center text-xs text-blue-600">
+                                <i class="fas fa-info-circle mr-1"></i> Pre-paid credit
+                            </div>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Uptime:</span>
-                            <span class="font-medium">${info.uptime}</span>
+
+                        <!-- Used this Month -->
+                        <div class="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <p class="text-sm font-medium text-gray-500 mb-1">Used this Month</p>
+                            <h3 class="text-2xl font-bold text-gray-900">$ ${data.usedThisMonth} <span class="text-sm font-normal text-gray-500">${data.currency}</span></h3>
+                            <div class="mt-4 flex items-center text-xs text-gray-500">
+                                <i class="fas fa-calendar-alt mr-1"></i> Since 1st of month
+                            </div>
+                        </div>
+
+                        <!-- Balance Status -->
+                        <div class="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <p class="text-sm font-medium text-gray-500 mb-1">Balance Status</p>
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-2">${statusDot[data.status]}</span>
+                                <h3 class="text-2xl font-bold text-gray-900">${data.status}</h3>
+                            </div>
+                            <div class="mt-4">
+                                <span class="px-2 py-1 text-xs rounded-full ${statusColors[data.status]} font-medium">
+                                    ${data.status === 'Good' ? 'Healthy Level' : (data.status === 'Low' ? 'Refill Recommended' : 'Immediate Refill Needed')}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="font-semibold text-gray-900 mb-2">API Information</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Endpoint:</span>
-                            <span class="font-medium">${info.apiEndpoint}</span>
+
+                    <!-- Usage Breakdown -->
+                    <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
+                        <div class="px-6 py-4 border-b bg-gray-50">
+                            <h3 class="font-bold text-gray-900 flex items-center">
+                                <i class="fas fa-chart-line mr-2 text-brand-teal"></i>
+                                Usage Breakdown (Last 30 days)
+                            </h3>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Last Updated:</span>
-                            <span class="font-medium">${new Date(info.lastUpdated).toLocaleString()}</span>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                                        <th class="px-6 py-3">Service</th>
+                                        <th class="px-6 py-3">Quantity</th>
+                                        <th class="px-6 py-3">Cost</th>
+                                        <th class="px-6 py-3">% of total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    ${data.breakdown.map(item => `
+                                        <tr>
+                                            <td class="px-6 py-4 font-medium text-gray-900">${item.service}</td>
+                                            <td class="px-6 py-4 text-gray-600">${item.quantity}</td>
+                                            <td class="px-6 py-4 text-gray-900 font-semibold">$ ${item.cost}</td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="progress-bar flex-1 min-w-[100px]">
+                                                        <div class="progress-fill" style="width: ${item.percentage}%"></div>
+                                                    </div>
+                                                    <span class="text-sm font-medium text-gray-600 w-8">${item.percentage}%</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-            `;
+
+                    ${parseFloat(data.balance) < 20 ? `
+                    <div class="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start">
+                        <div class="bg-amber-100 text-amber-600 p-2 rounded-lg mr-4">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-amber-900 mb-1">Low Balance Alert</h4>
+                            <p class="text-sm text-amber-800">Your balance is below $20. Auto-recharge will trigger at $10. Make sure your payment method is up to date.</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
             }
 
             // UI Functions
@@ -1873,6 +2031,9 @@
                         break;
                     case 'delivery-charges':
                         loadDeliveryCharges();
+                        break;
+                    case 'sms':
+                        loadTwilioOverview();
                         break;
                     case 'system':
                         // loadSystemInfo();
